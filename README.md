@@ -1,0 +1,2 @@
+# syntheticTrainingData
+A training project.
