@@ -1,0 +1,84 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "pattern": "^qa_\\d+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "category": {
+      "enum": [
+        "appliance_repair",
+        "general_home_repair",
+        "plumbing_repair",
+        "electrical_repair",
+        "hvac_maintenance"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "question": {
+      "maxLength": 500,
+      "minLength": 10,
+      "title": "Question",
+      "type": "string"
+    },
+    "answer": {
+      "maxLength": 5000,
+      "minLength": 20,
+      "title": "Answer",
+      "type": "string"
+    },
+    "issue": {
+      "maxLength": 300,
+      "minLength": 5,
+      "title": "Issue",
+      "type": "string"
+    },
+    "tools": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Tools",
+      "type": "array"
+    },
+    "steps": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 25,
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+    },
+    "safety_notes": {
+      "maxLength": 1000,
+      "minLength": 5,
+      "title": "Safety Notes",
+      "type": "string"
+    },
+    "tips": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Tips",
+      "type": "array"
+    }
+  },
+  "required": [
+    "id",
+    "category",
+    "question",
+    "answer",
+    "issue",
+    "tools",
+    "steps",
+    "safety_notes"
+  ],
+  "title": "HomeDiyRepairQA",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
