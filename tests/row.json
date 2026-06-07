@@ -1,0 +1,24 @@
+{
+  "id": "qa_042",
+  "category": "plumbing_repair",
+  "question": "How do I fix a dripping faucet in my kitchen sink?",
+  "answer": "Start by turning off the water supply valves under the sink. Place a bucket beneath the faucet to catch residual water. Remove the faucet handle by unscrewing the set screw, then pull off the handle. Use a wrench to remove the packing nut and pull out the stem. Inspect the washer at the bottom of the stem — if worn or cracked, replace it with a matching size. Reassemble in reverse order and slowly turn the water back on to test.",
+  "issue": "Dripping kitchen faucet",
+  "tools": ["adjustable wrench", "screwdriver", "replacement washers", "bucket", "plumber's grease"],
+  "steps": [
+    "Turn off water supply valves under the sink",
+    "Place a bucket under the faucet to catch drips",
+    "Remove the faucet handle by unscrewing the set screw",
+    "Use a wrench to loosen and remove the packing nut",
+    "Pull out the stem and inspect the washer",
+    "Replace the worn washer with a matching size",
+    "Reassemble the faucet in reverse order",
+    "Slowly turn the water back on and check for leaks"
+  ],
+  "safety_notes": "Always turn off the water supply fully before disassembly. Do not overtighten fittings — this can crack the seat. Dry the area before working to avoid slipping.",
+  "tips": [
+    "Take a photo of the faucet assembly before disassembly",
+    "Bring the old washer to the hardware store to match the size exactly",
+    "Apply plumber's grease to the new washer before installing"
+  ]
+}

@@ -1,0 +1,34 @@
+## Syntax reminders.
+  1. Check required fields — jq                                                                                                                                           
+                                                                                                                                                                          
+  jq '.required' home_diy_repair_qa.schema.json                                                                                                                           
+  Output: ["id","category","question","answer","issue","tools","steps","safety_notes"]
+                                                                                                                                                                          
+  ▎ tips is not required — it has a default of [] in model.py:23.
+                                                                                                                                                                          
+  2. Check min/max lengths — jq
+                                                                                                                                                                          
+  # All string fields with length constraints
+  jq '.properties | to_entries[] | select(.value.minLength or .value.maxLength) | {field: .key, min: .value.minLength, max: .value.maxLength}'
+  home_diy_repair_qa.schema.json                                                                                                                                          
+   
+  # All array fields with item count constraints                                                                                                                          
+  jq '.properties | to_entries[] | select(.value.minItems or .value.maxItems) | {field: .key, minItems: .value.minItems, maxItems: .value.maxItems}'
+  home_diy_repair_qa.schema.json                                                                                                                                          
+   
+  3. Check patterns and enums — jq                                                                                                                                        
+                  
+  # Pattern constraint (e.g. id must match ^qa_\d+$)                                                                                                                      
+  jq '.properties.id.pattern' home_diy_repair_qa.schema.json
+                                                                                                                                                                          
+  # Allowed enum values for category
+  jq '.properties.category.enum' home_diy_repair_qa.schema.json                                                                                                           
+                                                                                                                                                                          
+  4. Validate a JSON file against the schema — jsonschema CLI                                                                                                             
+                                                                                                                                                                          
+  # Install if needed:                                                                                                                                                    
+  pip install jsonschema
+
+  # Validate a file (e.g. a single record saved as row.json):                                                                                                             
+  python -m jsonschema --instance row.json home_diy_repair_qa.schema.json
+
