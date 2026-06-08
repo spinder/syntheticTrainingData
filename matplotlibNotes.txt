@@ -1,0 +1,46 @@
+### Capturing some notes
+● All four charts generated. Here's what was built and how to use it:                                                                                                     
+                                                                                                                                                                          
+  ---                                                                                                                                                                     
+  What changed                                                                                                                                                            
+                                                                                                                                                                          
+  - automated/providers/automated_provider.py — you rewired it from counter % 2 (alternating) to counter % 1 (always "true"), which is why run 10-37-45 shows Q1 and Q3   
+  failing — they expected "false" but got "true".                                                                                                                         
+  - automated/questions/q1-4.txt — you added copies of the questions under automated/.
+  - automated/promptfooconfig.yaml — you enabled all 4 test cases with their equals assertions.                                                                           
+  - visualize.py + charts/ — new (just created).                                                                                                                          
+                                                                                                                                                                          
+  ---                                                                                                                                                                     
+  Command line usage                                                                                                                                                      
+                                                                                                                                                                        
+  # All 4 charts from all automated runs
+  python3 visualize.py automated/logs/*.json --output-dir charts/automated                                                                                                
+   
+  # Single chart type                                                                                                                                                     
+  python3 visualize.py automated/logs/*.json --chart heatmap                                                                                                            
+  python3 visualize.py automated/logs/*.json --chart pass_rate                                                                                                            
+  python3 visualize.py automated/logs/*.json --chart agreement
+  python3 visualize.py automated/logs/*.json --chart distribution                                                                                                         
+                                                                                                                                                                        
+  # Single run only (no cross-run comparison)                                                                                                                             
+  python3 visualize.py automated/logs/2026-06-08T10-37-45-automated-results.json --output-dir charts/automated
+                                                                                                                                                                          
+  # Cross-judge agreement — mix result files from different judges                                                                                                        
+  python3 visualize.py automated/logs/*.json human/logs/*.json --chart agreement --output-dir charts/cross-judge                                                          
+                                                                                                                                                                          
+  ---             
+  What each chart shows with your current data                                                                                                                            
+                                              
+  ┌──────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │    Chart     │                                                What you see                                                 │                                          
+  ├──────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ pass_rate    │ Q0 and Q2 = 100% (always pass), Q1 and Q3 = 75% (3/4 runs pass) — one run regressed                         │                                          
+  ├──────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ heatmap      │ First 3 rows all green; run 10-37-45 has red cells at Q1 and Q3 — the exact commit where the provider broke │                                          
+  ├──────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤                                          
+  │ agreement    │ Q0/Q2 bars are full green (unanimous pass), Q1/Q3 have 1 red segment showing the disagreement               │                                          
+  ├──────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────┤                                          
+  │ distribution │ Runs 1–3 are fully green (4/4); run 4 is half red (2/4 fail)                                                │
+  └──────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘     
+
+

@@ -11,6 +11,7 @@ def call_api(prompt, options, context):
 
     answers = ["true", "false"]
     answer = answers[counter % 2]
+#    answer = answers[counter % 1]
     counter += 1
 
     return {
