@@ -212,9 +212,10 @@ def chart_distribution(runs: list[tuple[str, list]], output_dir: str) -> None:
     ax.set_title("Score distribution per run")
     ax.legend(fontsize=9)
 
-    total = (passes[0] + fails[0]) if runs else 1
+    total = max((passes[0] + fails[0]) if runs else 1, 1)
     for xi, (p, f) in enumerate(zip(passes, fails)):
-        ax.text(xi, total + 0.15, f"{p/(p+f):.0%}", ha="center", va="bottom", fontsize=8, color="gray")
+        label = f"{p/(p+f):.0%}" if (p + f) > 0 else "n/a"
+        ax.text(xi, total + 0.15, label, ha="center", va="bottom", fontsize=8, color="gray")
 
     plt.tight_layout()
     _save(fig, output_dir, "distribution.png")
