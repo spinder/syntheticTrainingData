@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from pydantic import ValidationError
-from model import HomeDiyRepairQA
+from schema.model import HomeDiyRepairQA
 
 dataset = load_dataset("dipenbhuva/home-diy-repair-qa", split="train")
 

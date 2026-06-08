@@ -1,7 +1,7 @@
 import json
 from jsonschema import Draft202012Validator
 
-with open("home_diy_repair_qa.schema.json", "r") as f:
+with open("schema/home_diy_repair_qa.schema.json", "r") as f:
     schema = json.load(f)
 
 Draft202012Validator.check_schema(schema)

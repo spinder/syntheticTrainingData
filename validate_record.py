@@ -3,7 +3,7 @@ import argparse
 import json
 import sys
 from pydantic import ValidationError
-from model import HomeDiyRepairQA
+from schema.model import HomeDiyRepairQA
 
 parser = argparse.ArgumentParser(description="Validate a JSON record against HomeDiyRepairQA schema")
 parser.add_argument("file", help="Path to the JSON file to validate")
