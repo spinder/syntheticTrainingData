@@ -1,0 +1,40 @@
+--- Q&A ITEM ---
+question: The outlet in my kitchen stopped working. How do I replace it?
+
+answer: |
+  Tools: flathead screwdriver, Phillips screwdriver, non-contact voltage tester, needle-nose
+  pliers, electrical tape, replacement 15A or 20A outlet (match the amperage on the old one).
+
+  1. Go to your breaker panel and flip the breaker for the kitchen circuit to OFF.
+  2. Remove the outlet cover plate (one center screw) and unscrew the outlet from the box
+     (two screws top and bottom).
+  3. Gently pull the outlet out 3–4 inches to expose the wires. Do NOT touch the wires yet.
+  4. Replace the outlet: connect black wire to the brass screw (hot), white wire to the
+     silver screw (neutral), bare copper or green wire to the green screw (ground).
+     Tighten each screw firmly — a loose connection causes arcing.
+  5. Push the outlet back into the box, screw it in, replace the cover plate.
+  6. Restore the breaker and test with a lamp or phone charger.
+
+equipment_problem: Kitchen outlet stopped working
+
+tools_required:
+  - flathead screwdriver
+  - Phillips screwdriver
+  - non-contact voltage tester
+  - needle-nose pliers
+  - electrical tape
+  - replacement outlet (15A or 20A)
+
+steps:
+  - Flip the correct circuit breaker to OFF at the panel
+  - Remove the cover plate and unscrew the outlet from the electrical box
+  - Pull the outlet out and use the voltage tester to confirm no live power
+  - Disconnect old outlet; connect wires to new outlet matching terminal colors
+  - Push outlet back in, screw down, replace cover plate
+  - Restore breaker and test the outlet
+
+safety_info: Be careful when working with electricity. Make sure to turn things off first.
+
+tips:
+  - Take your time and double-check your work.
+  - If you are not confident, call a licensed electrician.

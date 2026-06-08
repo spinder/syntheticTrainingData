@@ -1,0 +1,46 @@
+--- Q&A ITEM ---
+question: My dryer runs but produces no heat — clothes come out still damp. How do I fix this?
+
+answer: |
+  Tools needed: Phillips screwdriver, multimeter, replacement thermal fuse (under $10 at any
+  appliance parts store — search your model number for the exact part).
+
+  1. Unplug the dryer from the wall outlet before any disassembly.
+  2. Pull the dryer away from the wall and remove the back panel (6–8 Phillips screws).
+  3. Locate the thermal fuse — it is a small white or black plastic component mounted
+     directly on the exhaust duct near the heating element. It has two wire connectors.
+  4. Set your multimeter to continuity mode and probe both terminals of the thermal fuse.
+     A blown fuse reads no continuity (open circuit). A working fuse beeps or reads near 0 Ω.
+  5. If blown: pull off the two wire connectors, unscrew the fuse (one screw), install the
+     new fuse, reconnect wires. Do not overtighten — the housing is plastic.
+  6. BEFORE reassembling, disconnect and clean the entire exhaust duct from dryer to wall
+     exit with a dryer vent brush kit. A clogged vent is what blew the fuse — skipping
+     this step means the new fuse will blow again within weeks.
+  7. Reinstall the back panel, plug in, run a test cycle with a damp towel.
+
+equipment_problem: Dryer runs but produces no heat
+
+tools_required:
+  - Phillips screwdriver
+  - multimeter
+  - replacement thermal fuse (model-specific)
+  - dryer vent brush kit
+
+steps:
+  - Unplug dryer from wall outlet
+  - Remove back panel screws and pull panel off
+  - Locate the thermal fuse on the exhaust duct near the heating element
+  - Test fuse continuity with multimeter — no continuity confirms it is blown
+  - Replace blown fuse with correct part number; reconnect wire terminals
+  - Clean full exhaust duct with vent brush kit before reassembly
+  - Reinstall panel, plug in, run test cycle
+
+safety_info: |
+  Unplug the dryer from its 240V outlet before removing the back panel. Unlike a standard
+  120V outlet, a dryer outlet carries enough current to cause fatal electrocution on
+  contact — do not rely on the circuit breaker alone; physically pull the plug.
+
+tips:
+  - Remember to clean the lint trap regularly.
+  - If the dryer still does not heat after replacing the thermal fuse, call an appliance
+    repair technician.

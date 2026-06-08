@@ -3,13 +3,13 @@
   "category": "roof_repair",
   "question": "Fix sink?",
   "answer": "Try tightening it.",
-  "issue": "Drip",
-  "tools": [],
+  "equipment_problem": "Drip",
+  "tools_required": [],
   "steps": [
     "Step 1",
     "Step 2"
   ],
-  "safety_notes": "Be safe.",
+  "safety_info": "Be safe.",
   "tips": ["tip1", "tip2", "tip3", "tip4", "tip5", "tip6", "tip7", "tip8", "tip9", "tip10", "tip11"],
   "extra_field": "this should not be here"
 }

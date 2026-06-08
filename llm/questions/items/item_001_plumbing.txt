@@ -1,0 +1,50 @@
+--- Q&A ITEM ---
+question: My bathroom faucet drips constantly even when fully closed — how do I fix it?
+
+answer: |
+  Tools needed: adjustable wrench, flathead and Phillips screwdrivers, replacement washers
+  and O-rings (bring the old ones to the hardware store to match size), plumber's grease.
+
+  1. Turn off the water supply valves under the sink — turn clockwise until they stop.
+     Verify water is off by opening the faucet fully until flow stops completely.
+  2. Remove the decorative cap on top of the handle (pry gently with a flathead) and
+     unscrew the handle screw underneath. Pull the handle straight up and off.
+  3. Use the adjustable wrench to unscrew the packing nut — turn counterclockwise.
+     Lift out the stem assembly straight up.
+  4. Inspect the rubber seat washer at the bottom of the stem. If it is flattened,
+     cracked, or has a groove worn into it, that is your leak source. Unscrew and
+     replace it with an identical new washer.
+  5. Also check and replace the O-rings on the stem body if they appear dry or cracked.
+     Apply a thin coat of plumber's grease to all new rubber parts before reassembly.
+  6. Reassemble in reverse order, hand-tighten the packing nut then add a quarter turn
+     with the wrench. Restore water supply and test — the drip should be gone.
+
+equipment_problem: Bathroom faucet drips constantly when fully closed
+
+tools_required:
+  - adjustable wrench
+  - flathead screwdriver
+  - Phillips screwdriver
+  - replacement washers and O-rings
+  - plumber's grease
+
+steps:
+  - Turn off hot and cold supply valves under the sink; confirm no flow at the open faucet
+  - Remove decorative handle cap, unscrew handle screw, pull handle off
+  - Unscrew packing nut counterclockwise with adjustable wrench; lift stem straight out
+  - Inspect and replace the rubber seat washer at the bottom of the stem
+  - Inspect and replace O-rings on the stem; apply plumber's grease to all new rubber parts
+  - Reassemble in reverse; hand-tighten packing nut plus a quarter turn; restore supply and test
+
+safety_info: |
+  Turn off both supply valves (hot and cold) completely before disassembling. Confirm no
+  water pressure remains by opening the faucet until flow stops — residual pressure can
+  spray water forcefully when the packing nut is removed.
+
+tips:
+  - Match the replacement washer by taking the old one to the hardware store — washer
+    diameters vary by 1–2 mm and even a slight mismatch will cause the new washer to leak
+    or wear prematurely.
+  - If the faucet still drips after replacing the washer, the brass seat inside the faucet
+    body may be scored. A seat wrench ($8 tool) lets you unscrew and replace it without
+    buying a whole new faucet.

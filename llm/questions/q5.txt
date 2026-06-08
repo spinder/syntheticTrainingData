@@ -1,0 +1,8 @@
+DIMENSION D5 — Context Clarity
+
+Do the question and answer together contain enough context to understand the problem without
+outside knowledge? The answer must directly address the specific equipment_problem stated —
+not a similar but different problem. An answer that is vague about which component to inspect,
+assumes the reader already knows steps, or solves a different problem than the one described FAILS.
+
+Respond with ONLY one word: pass   or   fail

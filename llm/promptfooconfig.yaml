@@ -1,19 +1,113 @@
-description: LLM judge — Claude evaluates model responses
+description: LLM judge (Claude) — 6-dimension DIY repair Q&A quality evaluation
 
 prompts:
-  - file://prompts/system_prompt.txt
+  - file://prompts/evaluation_template.txt
 
 providers:
-  - anthropic:messages:claude-opus-4-7
+  - id: file://providers/llm_judge_provider.py
+    label: llm-judge-claude
 
 defaultTest:
   assert:
-    - type: llm-rubric
-      value: "The response is factually accurate and well-structured."
+    - type: javascript
+      value: "['pass','fail'].includes(output.toLowerCase().trim())"
 
-# tests:
-#   - vars:
-#       question: file://questions/q1.txt
-#     assert:
-#       - type: llm-rubric
-#         value: "Correct and concise answer."
+tests:
+  # ------------------------------------------------------------------
+  # Item 001 — Plumbing: dripping faucet  (expected: all 6 pass)
+  # ------------------------------------------------------------------
+  - description: "item_001_plumbing | D1 answer_completeness"
+    vars:
+      item: file://questions/items/item_001_plumbing.txt
+      question: file://questions/q1.txt
+
+  - description: "item_001_plumbing | D2 safety_specificity"
+    vars:
+      item: file://questions/items/item_001_plumbing.txt
+      question: file://questions/q2.txt
+
+  - description: "item_001_plumbing | D3 tool_realism"
+    vars:
+      item: file://questions/items/item_001_plumbing.txt
+      question: file://questions/q3.txt
+
+  - description: "item_001_plumbing | D4 scope_appropriateness"
+    vars:
+      item: file://questions/items/item_001_plumbing.txt
+      question: file://questions/q4.txt
+
+  - description: "item_001_plumbing | D5 context_clarity"
+    vars:
+      item: file://questions/items/item_001_plumbing.txt
+      question: file://questions/q5.txt
+
+  - description: "item_001_plumbing | D6 tip_usefulness"
+    vars:
+      item: file://questions/items/item_001_plumbing.txt
+      question: file://questions/q6.txt
+
+  # ------------------------------------------------------------------
+  # Item 002 — Electrical: dead outlet  (expected: D2 fail, D6 fail)
+  # ------------------------------------------------------------------
+  - description: "item_002_electrical | D1 answer_completeness"
+    vars:
+      item: file://questions/items/item_002_electrical.txt
+      question: file://questions/q1.txt
+
+  - description: "item_002_electrical | D2 safety_specificity"
+    vars:
+      item: file://questions/items/item_002_electrical.txt
+      question: file://questions/q2.txt
+
+  - description: "item_002_electrical | D3 tool_realism"
+    vars:
+      item: file://questions/items/item_002_electrical.txt
+      question: file://questions/q3.txt
+
+  - description: "item_002_electrical | D4 scope_appropriateness"
+    vars:
+      item: file://questions/items/item_002_electrical.txt
+      question: file://questions/q4.txt
+
+  - description: "item_002_electrical | D5 context_clarity"
+    vars:
+      item: file://questions/items/item_002_electrical.txt
+      question: file://questions/q5.txt
+
+  - description: "item_002_electrical | D6 tip_usefulness"
+    vars:
+      item: file://questions/items/item_002_electrical.txt
+      question: file://questions/q6.txt
+
+  # ------------------------------------------------------------------
+  # Item 003 — Appliance: dryer no heat  (expected: D6 fail)
+  # ------------------------------------------------------------------
+  - description: "item_003_appliance | D1 answer_completeness"
+    vars:
+      item: file://questions/items/item_003_appliance.txt
+      question: file://questions/q1.txt
+
+  - description: "item_003_appliance | D2 safety_specificity"
+    vars:
+      item: file://questions/items/item_003_appliance.txt
+      question: file://questions/q2.txt
+
+  - description: "item_003_appliance | D3 tool_realism"
+    vars:
+      item: file://questions/items/item_003_appliance.txt
+      question: file://questions/q3.txt
+
+  - description: "item_003_appliance | D4 scope_appropriateness"
+    vars:
+      item: file://questions/items/item_003_appliance.txt
+      question: file://questions/q4.txt
+
+  - description: "item_003_appliance | D5 context_clarity"
+    vars:
+      item: file://questions/items/item_003_appliance.txt
+      question: file://questions/q5.txt
+
+  - description: "item_003_appliance | D6 tip_usefulness"
+    vars:
+      item: file://questions/items/item_003_appliance.txt
+      question: file://questions/q6.txt

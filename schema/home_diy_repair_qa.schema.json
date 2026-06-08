@@ -1,22 +1,7 @@
 {
   "additionalProperties": false,
+  "description": "7-field schema matching the project spec.\nid and category are pipeline-assigned metadata; LLM generation omits them.",
   "properties": {
-    "id": {
-      "pattern": "^qa_\\d+$",
-      "title": "Id",
-      "type": "string"
-    },
-    "category": {
-      "enum": [
-        "appliance_repair",
-        "general_home_repair",
-        "plumbing_repair",
-        "electrical_repair",
-        "hvac_maintenance"
-      ],
-      "title": "Category",
-      "type": "string"
-    },
     "question": {
       "maxLength": 500,
       "minLength": 10,
@@ -29,19 +14,19 @@
       "title": "Answer",
       "type": "string"
     },
-    "issue": {
+    "equipment_problem": {
       "maxLength": 300,
       "minLength": 5,
-      "title": "Issue",
+      "title": "Equipment Problem",
       "type": "string"
     },
-    "tools": {
+    "tools_required": {
       "items": {
         "type": "string"
       },
       "maxItems": 20,
       "minItems": 1,
-      "title": "Tools",
+      "title": "Tools Required",
       "type": "array"
     },
     "steps": {
@@ -49,14 +34,14 @@
         "type": "string"
       },
       "maxItems": 25,
-      "minItems": 1,
+      "minItems": 3,
       "title": "Steps",
       "type": "array"
     },
-    "safety_notes": {
+    "safety_info": {
       "maxLength": 1000,
-      "minLength": 5,
-      "title": "Safety Notes",
+      "minLength": 20,
+      "title": "Safety Info",
       "type": "string"
     },
     "tips": {
@@ -64,19 +49,51 @@
         "type": "string"
       },
       "maxItems": 10,
+      "minItems": 1,
       "title": "Tips",
       "type": "array"
+    },
+    "id": {
+      "anyOf": [
+        {
+          "pattern": "^qa_\\d+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Id"
+    },
+    "category": {
+      "anyOf": [
+        {
+          "enum": [
+            "appliance_repair",
+            "general_home_repair",
+            "plumbing_repair",
+            "electrical_repair",
+            "hvac_maintenance"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Category"
     }
   },
   "required": [
-    "id",
-    "category",
     "question",
     "answer",
-    "issue",
-    "tools",
+    "equipment_problem",
+    "tools_required",
     "steps",
-    "safety_notes"
+    "safety_info",
+    "tips"
   ],
   "title": "HomeDiyRepairQA",
   "type": "object",

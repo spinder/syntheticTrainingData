@@ -1,0 +1,9 @@
+DIMENSION D6 — Tip Usefulness
+
+Do the tips provide non-obvious, task-specific advice that adds value beyond the steps?
+Tips that FAIL this dimension: restate a step already covered ("remember to turn off the
+water"), offer generic encouragement ("take your time"), give obvious safety reminders
+already in safety_info, or say "call a professional if unsure" without task-specific content.
+A passing tip tells the reader something a beginner would not know from the steps alone.
+
+Respond with ONLY one word: pass   or   fail
