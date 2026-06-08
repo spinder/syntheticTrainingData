@@ -1,0 +1,10 @@
+Answer the following 5 questions in strict order, Q0 through Q4.
+
+Return ONLY a raw JSON array of exactly 5 integers — no markdown, no explanation, no extra text.
+Format: [answer_to_Q0, answer_to_Q1, answer_to_Q2, answer_to_Q3, answer_to_Q4]
+
+Q0: {{q0}}
+Q1: {{q1}}
+Q2: {{q2}}
+Q3: {{q3}}
+Q4: {{q4}}

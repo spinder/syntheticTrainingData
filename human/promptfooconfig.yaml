@@ -1,0 +1,33 @@
+description: Human-style true/false demo with alternating hard-coded answers
+
+prompts:
+  - "{{question}}"
+
+providers:
+  - id: file://providers/human_provider.py
+    label: fake-human-alternating-true-false
+
+tests:
+  - vars:
+      question: file://questions/q1.txt
+    assert:
+      - type: equals
+        value: "true"
+
+  - vars:
+      question: file://questions/q2.txt
+    assert:
+      - type: equals
+        value: "false"
+
+  - vars:
+      question: file://questions/q3.txt
+    assert:
+      - type: equals
+        value: "true"
+
+  - vars:
+      question: file://questions/q4.txt
+    assert:
+      - type: equals
+        value: "false"

@@ -1,0 +1,44 @@
+#description: Automated judge — rule-based or script-driven evaluation
+description: Human-style true/false demo with alternating hard-coded answers
+
+prompts:
+  - "{{question}}"
+
+providers:
+  - id: file://providers/automated_provider.py
+    label: automated-rule-based
+
+tests:
+  - vars:
+      question: file://questions/q1.txt
+    assert:
+      - type: equals
+        value: "true"
+
+  - vars:
+      question: file://questions/q2.txt
+    assert:
+      - type: equals
+        value: "false"
+
+  - vars:
+      question: file://questions/q3.txt
+    assert:
+      - type: equals
+        value: "true"
+
+  - vars:
+      question: file://questions/q4.txt
+    assert:
+      - type: equals
+        value: "false"
+
+
+#tests: []
+# Uncomment and add test cases here:
+# tests:
+#   - vars:
+#       question: file://questions/q1.txt
+#     assert:
+#       - type: equals
+#         value: "expected answer"

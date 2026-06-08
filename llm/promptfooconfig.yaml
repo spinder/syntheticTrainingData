@@ -1,0 +1,19 @@
+description: LLM judge — Claude evaluates model responses
+
+prompts:
+  - file://prompts/system_prompt.txt
+
+providers:
+  - anthropic:messages:claude-opus-4-7
+
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: "The response is factually accurate and well-structured."
+
+# tests:
+#   - vars:
+#       question: file://questions/q1.txt
+#     assert:
+#       - type: llm-rubric
+#         value: "Correct and concise answer."
