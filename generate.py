@@ -172,8 +172,9 @@ def generate_one(
     api_type: str,
     model: str,
     category: str,
+    generation_prompt: str = GENERATION_PROMPT,
 ) -> HomeDiyRepairQA | None:
-    prompt = GENERATION_PROMPT.format(category_label=CATEGORY_LABELS[category])
+    prompt = generation_prompt.format(category_label=CATEGORY_LABELS[category])
     kwargs = dict(
         model=model,
         max_tokens=2000,
@@ -224,7 +225,27 @@ def main() -> None:
         "--output-dir", default="generated_data",
         help="Directory for output JSONL files (default: generated_data/)",
     )
+    parser.add_argument(
+        "--prompt-file", default=None,
+        help="Path to a .txt prompt template containing {category_label}. "
+             "Overrides the built-in GENERATION_PROMPT. "
+             "Auto-sets --variant to the file stem when --variant is not specified.",
+    )
     args = parser.parse_args()
+
+    if args.prompt_file:
+        prompt_path = Path(args.prompt_file)
+        if not prompt_path.exists():
+            raise SystemExit(f"--prompt-file not found: {args.prompt_file}")
+        generation_prompt = prompt_path.read_text()
+        if "{category_label}" not in generation_prompt:
+            raise SystemExit(
+                f"--prompt-file '{args.prompt_file}' must contain the placeholder {{category_label}}"
+            )
+        if args.variant == DEFAULT_VARIANT:
+            args.variant = prompt_path.stem
+    else:
+        generation_prompt = GENERATION_PROMPT
 
     model = args.model or PROVIDER_DEFAULTS[args.provider]
     client, api_type = build_client(args.provider)
@@ -256,7 +277,7 @@ def main() -> None:
                     print(f"    !! gave up on {category} after {attempts} attempts")
                     break
 
-                item = generate_one(client, api_type, model, category)
+                item = generate_one(client, api_type, model, category, generation_prompt)
                 if item is None:
                     total_errors += 1
                     time.sleep(1)
