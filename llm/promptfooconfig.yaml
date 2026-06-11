@@ -10,7 +10,7 @@ providers:
 defaultTest:
   assert:
     - type: javascript
-      value: "['pass','fail'].includes(output.toLowerCase().trim())"
+      value: "output.toLowerCase().trim() === 'pass'"
 
 tests:
   # ------------------------------------------------------------------

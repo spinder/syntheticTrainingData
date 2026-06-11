@@ -52,6 +52,15 @@ def run_label(path: str) -> str:
     return stem[:24]
 
 
+def _verdict(row: dict) -> bool:
+    """Return True if the judge said 'pass'. Reads response.output first;
+    falls back to gradingResult.pass for assertion-based setups."""
+    output = (row.get("response") or {}).get("output", "")
+    if isinstance(output, str) and output.strip().lower() in ("pass", "fail"):
+        return output.strip().lower() == "pass"
+    return bool((row.get("gradingResult") or {}).get("pass", False))
+
+
 def question_label(row: dict, max_len: int = 26) -> str:
     raw = row["prompt"].get("raw", "")
     label = raw[:max_len] + ("…" if len(raw) > max_len else "")
@@ -74,7 +83,7 @@ def chart_pass_rate(runs: list[tuple[str, list]], output_dir: str) -> None:
     for _, rows in runs:
         for row in rows:
             idx = row["testIdx"]
-            idx_passes[idx].append(1 if row["gradingResult"]["pass"] else 0)
+            idx_passes[idx].append(1 if _verdict(row) else 0)
             idx_label[idx] = question_label(row)
 
     indices = sorted(idx_passes)
@@ -121,7 +130,7 @@ def chart_heatmap(runs: list[tuple[str, list]], output_dir: str) -> None:
     row_labels = [run_label(p) for p, _ in runs]
 
     matrix = np.array([
-        [1 if {row["testIdx"]: row["gradingResult"]["pass"] for row in rows}.get(i, False) else 0
+        [1 if {row["testIdx"]: _verdict(row) for row in rows}.get(i, False) else 0
          for i in all_indices]
         for _, rows in runs
     ], dtype=float)
@@ -158,7 +167,7 @@ def chart_agreement(runs: list[tuple[str, list]], output_dir: str) -> None:
     for _, rows in runs:
         for row in rows:
             idx = row["testIdx"]
-            if row["gradingResult"]["pass"]:
+            if _verdict(row):
                 idx_pass[idx] += 1
             else:
                 idx_fail[idx] += 1
@@ -199,8 +208,8 @@ def chart_agreement(runs: list[tuple[str, list]], output_dir: str) -> None:
 def chart_distribution(runs: list[tuple[str, list]], output_dir: str) -> None:
     """Stacked bar per run: pass count vs fail count."""
     labels = [run_label(p) for p, _ in runs]
-    passes = [sum(1 for row in rows if row["gradingResult"]["pass"]) for _, rows in runs]
-    fails = [sum(1 for row in rows if not row["gradingResult"]["pass"]) for _, rows in runs]
+    passes = [sum(1 for row in rows if _verdict(row)) for _, rows in runs]
+    fails = [sum(1 for row in rows if not _verdict(row)) for _, rows in runs]
 
     x = range(len(labels))
     fig, ax = plt.subplots(figsize=(max(6, len(labels) * 1.6), 4))

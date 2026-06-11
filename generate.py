@@ -58,7 +58,7 @@ PROVIDER_DEFAULTS: dict[str, str] = {
     "deepseek": "deepseek-chat",   # maps to their current best chat model
 }
 
-DEFAULT_PROVIDER         = "claude"
+DEFAULT_PROVIDER         = os.environ.get("LLM_PROVIDER", "claude").lower()
 DEFAULT_ITEMS_PER_CATEGORY = 12      # 60 total; above the ≥50 target
 MAX_RETRIES_PER_SLOT     = 4
 INTER_REQUEST_DELAY      = 0.5       # seconds between API calls
@@ -210,8 +210,9 @@ def main() -> None:
         help=f"LLM provider (default: {DEFAULT_PROVIDER})",
     )
     parser.add_argument(
-        "--model", default=None,
-        help="Model name override (defaults: claude→claude-opus-4-7, openai→gpt-4o, deepseek→deepseek-chat)",
+        "--model", default=os.environ.get("LLM_MODEL"),
+        help="Model name override (defaults: claude→claude-opus-4-7, openai→gpt-4o, deepseek→deepseek-chat). "
+             "Falls back to LLM_MODEL env var.",
     )
     parser.add_argument(
         "--per-category", type=int, default=DEFAULT_ITEMS_PER_CATEGORY,
