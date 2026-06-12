@@ -3,13 +3,16 @@
 Step 1 — Synthetic Data Generator
 
 Generates Home DIY Repair Q&A items using Instructor + your choice of LLM provider.
-All three providers emit the same 7-field schema; output JSONL is identical.
+All four providers emit the same 7-field schema; output JSONL is identical.
 
 Providers
 ---------
   claude    (default)  Anthropic Claude — set ANTHROPIC_API_KEY
   openai               OpenAI GPT       — set OPENAI_API_KEY
   deepseek             DeepSeek         — set DEEPSEEK_API_KEY
+  groq                 Groq cloud       — set GROQ_API_KEY (free tier at console.groq.com)
+  ollama               Local Ollama     — no API key; ollama must be running
+                       WARNING: requires sufficient local RAM/VRAM — see README
 
 Usage
 -----
@@ -18,9 +21,16 @@ Usage
   python3 generate.py
 
   # Switch provider / model
+  python3 generate.py --provider groq     --model llama-3.1-8b-instant
+  python3 generate.py --provider groq     --model llama3-70b-8192
   python3 generate.py --provider openai   --model gpt-4o
   python3 generate.py --provider openai   --model gpt-4o-mini
   python3 generate.py --provider deepseek --model deepseek-chat
+  python3 generate.py --provider ollama   --model llama3.1
+  python3 generate.py --provider ollama   --model mistral
+
+  # Custom Ollama base URL (default: http://localhost:11434)
+  OLLAMA_BASE_URL=http://192.168.1.10:11434 python3 generate.py --provider ollama --model llama3.1
 
   # Smaller smoke test
   python3 generate.py --per-category 3
@@ -55,7 +65,9 @@ from schema.model import HomeDiyRepairQA
 PROVIDER_DEFAULTS: dict[str, str] = {
     "claude":   "claude-opus-4-7",
     "openai":   "gpt-4o",
-    "deepseek": "deepseek-chat",   # maps to their current best chat model
+    "deepseek": "deepseek-chat",        # maps to their current best chat model
+    "groq":     "llama-3.1-8b-instant", # free tier; also: llama3-70b-8192, mixtral-8x7b-32768
+    "ollama":   "llama3.1",             # must be pulled locally: ollama pull llama3.1
 }
 
 DEFAULT_PROVIDER         = os.environ.get("LLM_PROVIDER", "claude").lower()
@@ -154,13 +166,34 @@ def build_client(provider: str) -> tuple[instructor.Instructor, str]:
         key = os.environ.get("DEEPSEEK_API_KEY")
         if not key:
             raise SystemExit("DEEPSEEK_API_KEY is not set — see SETUP.txt for instructions.")
-        # DeepSeek exposes an OpenAI-compatible endpoint
         return instructor.from_openai(
             openai.OpenAI(api_key=key, base_url="https://api.deepseek.com/v1")
         ), "openai"
 
+    elif provider == "groq":
+        key = os.environ.get("GROQ_API_KEY")
+        if not key:
+            raise SystemExit(
+                "GROQ_API_KEY is not set. "
+                "Get a free key at https://console.groq.com, then: export GROQ_API_KEY='gsk_...'"
+            )
+        return instructor.from_openai(
+            openai.OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
+        ), "openai"
+
+    elif provider == "ollama":
+        base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        if not base_url.endswith("/v1"):
+            base_url = base_url.rstrip("/") + "/v1"
+        # Ollama's OpenAI-compatible endpoint requires a non-empty key string;
+        # the value is ignored — "ollama" is the conventional placeholder.
+        return instructor.from_openai(
+            openai.OpenAI(api_key="ollama", base_url=base_url),
+            mode=instructor.Mode.JSON,   # tool-calling is unreliable on most local models
+        ), "openai"
+
     else:
-        raise SystemExit(f"Unknown provider '{provider}'. Choose: claude, openai, deepseek")
+        raise SystemExit(f"Unknown provider '{provider}'. Choose: claude, openai, deepseek, groq, ollama")
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +217,7 @@ def generate_one(
     try:
         if api_type == "anthropic":
             return client.messages.create(**kwargs)
-        else:  # openai-compatible (openai, deepseek)
+        else:  # openai-compatible (openai, deepseek, groq, ollama)
             return client.chat.completions.create(**kwargs)
     except ValidationError as exc:
         print(f"      [validation error] {exc.error_count()} field(s) failed schema — skipping")
@@ -206,7 +239,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--provider", default=DEFAULT_PROVIDER,
-        choices=["claude", "openai", "deepseek"],
+        choices=["claude", "openai", "deepseek", "groq", "ollama"],
         help=f"LLM provider (default: {DEFAULT_PROVIDER})",
     )
     parser.add_argument(
