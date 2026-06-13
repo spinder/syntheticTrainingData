@@ -142,6 +142,24 @@ tips
   FAIL: "Take your time and double-check your work."
   PASS: "If the new thermal fuse blows again within a few weeks, the exhaust duct is
   still clogged — clean it from dryer to wall exit before replacing the fuse a third time."
+
+Schema constraints — your output MUST satisfy ALL of the following or it will
+be rejected and you will be asked to regenerate:
+
+  Field               Type     Hard limits
+  ──────────────────  ───────  ──────────────────────────────────────────────
+  question            string   10–500 characters
+  answer              string   20–5000 characters  (aim for 700–1300 for quality)
+  equipment_problem   string   5–300 characters
+  tools_required      array    1–20 items; every item must be a non-empty string
+  steps               array    3–25 items; every item must be a non-empty string
+  safety_info         string   20–1000 characters
+  tips                array    1–10 items; every item must be a non-empty string
+
+  - Do NOT output the fields id or category — these are assigned by the pipeline.
+  - Do NOT include empty strings in any list field.
+  - tools_required, steps, and tips must be JSON arrays of strings, not a
+    single string with newlines or bullet points.
 """
 
 # ---------------------------------------------------------------------------
