@@ -111,3 +111,69 @@ tests:
     vars:
       item: file://questions/items/item_003_appliance.txt
       question: file://questions/q6.txt
+
+  # ------------------------------------------------------------------
+  # Item 004 — HVAC: AC runs but won't cool  (expected: all 6 pass)
+  # ------------------------------------------------------------------
+  - description: "item_004_hvac | D1 answer_completeness"
+    vars:
+      item: file://questions/items/item_004_hvac.txt
+      question: file://questions/q1.txt
+
+  - description: "item_004_hvac | D2 safety_specificity"
+    vars:
+      item: file://questions/items/item_004_hvac.txt
+      question: file://questions/q2.txt
+
+  - description: "item_004_hvac | D3 tool_realism"
+    vars:
+      item: file://questions/items/item_004_hvac.txt
+      question: file://questions/q3.txt
+
+  - description: "item_004_hvac | D4 scope_appropriateness"
+    vars:
+      item: file://questions/items/item_004_hvac.txt
+      question: file://questions/q4.txt
+
+  - description: "item_004_hvac | D5 context_clarity"
+    vars:
+      item: file://questions/items/item_004_hvac.txt
+      question: file://questions/q5.txt
+
+  - description: "item_004_hvac | D6 tip_usefulness"
+    vars:
+      item: file://questions/items/item_004_hvac.txt
+      question: file://questions/q6.txt
+
+  # ------------------------------------------------------------------
+  # Item 005 — General Home: door weatherstripping  (expected: all 6 pass)
+  # ------------------------------------------------------------------
+  - description: "item_005_general_home | D1 answer_completeness"
+    vars:
+      item: file://questions/items/item_005_general_home.txt
+      question: file://questions/q1.txt
+
+  - description: "item_005_general_home | D2 safety_specificity"
+    vars:
+      item: file://questions/items/item_005_general_home.txt
+      question: file://questions/q2.txt
+
+  - description: "item_005_general_home | D3 tool_realism"
+    vars:
+      item: file://questions/items/item_005_general_home.txt
+      question: file://questions/q3.txt
+
+  - description: "item_005_general_home | D4 scope_appropriateness"
+    vars:
+      item: file://questions/items/item_005_general_home.txt
+      question: file://questions/q4.txt
+
+  - description: "item_005_general_home | D5 context_clarity"
+    vars:
+      item: file://questions/items/item_005_general_home.txt
+      question: file://questions/q5.txt
+
+  - description: "item_005_general_home | D6 tip_usefulness"
+    vars:
+      item: file://questions/items/item_005_general_home.txt
+      question: file://questions/q6.txt
