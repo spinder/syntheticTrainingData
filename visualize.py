@@ -4,16 +4,18 @@ Generate matplotlib charts from one or more promptfoo result JSON files.
 
 Charts
 ------
-  pass_rate    Per-question pass rate across all supplied runs (bar)
-  heatmap      Run × question pass/fail matrix
-  agreement    Stacked pass/fail counts per question across runs/judges
-  distribution Pass vs fail counts per run (stacked bar)
-  all          All of the above (default)
+  pass_rate              Per-question pass rate across all supplied runs (bar)
+  heatmap                Run × question pass/fail matrix
+  agreement              Stacked pass/fail counts per question across runs/judges
+  distribution           Pass vs fail counts per run (stacked bar)
+  category_quality       Category × quality-dimension fail-rate heatmap
+  all                    All of the above (default)
 
 Examples
 --------
   python3 visualize.py automated/logs/*.json
   python3 visualize.py automated/logs/*.json --chart heatmap
+  python3 visualize.py human/logs/*.json --chart category_quality
   python3 visualize.py automated/logs/*.json human/logs/*.json --chart agreement
   python3 visualize.py automated/logs/2026-06-08T10-37-45-automated-results.json --chart pass_rate --output-dir charts/automated
 """
@@ -21,6 +23,7 @@ Examples
 import argparse
 import json
 import os
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -31,6 +34,41 @@ import numpy as np
 PASS_COLOR = "#4CAF50"
 FAIL_COLOR = "#F44336"
 PARTIAL_COLOR = "#FF9800"
+
+# Canonical dimension order and display labels for the category×quality heatmap.
+# Keys match the snake_case names encoded in test descriptions ("D1 answer_completeness").
+_DIM_ORDER = [
+    "answer_completeness",
+    "safety_specificity",
+    "tool_realism",
+    "scope_appropriateness",
+    "context_clarity",
+    "tip_usefulness",
+]
+_DIM_LABELS = {
+    "answer_completeness": "Answer Completeness",
+    "safety_specificity": "Safety Specificity",
+    "tool_realism": "Tool Realism",
+    "scope_appropriateness": "Scope Appropriateness",
+    "context_clarity": "Context Clarity",
+    "tip_usefulness": "Tip Usefulness",
+}
+
+# Canonical category display order and label overrides.
+_CAT_DISPLAY = {
+    "appliance": "Appliance",
+    "appliance_repair": "Appliance",
+    "electrical": "Electrical",
+    "electrical_repair": "Electrical",
+    "plumbing": "Plumbing",
+    "plumbing_repair": "Plumbing",
+    "hvac": "HVAC",
+    "hvac_maintenance": "HVAC",
+    "general": "General Home",
+    "general_home": "General Home",
+    "general_home_repair": "General Home",
+}
+_CAT_ORDER = ["Appliance", "Electrical", "Plumbing", "HVAC", "General Home"]
 
 
 # ---------------------------------------------------------------------------
@@ -231,6 +269,147 @@ def chart_distribution(runs: list[tuple[str, list]], output_dir: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Chart: category × quality-dimension fail-rate heatmap
+# ---------------------------------------------------------------------------
+
+def _parse_cat_dim(description: str) -> tuple[str, str] | None:
+    """Extract (raw_category, dimension) from a test description.
+
+    Expects the format produced by human/promptfooconfig.yaml:
+      "item_001_plumbing | D1 answer_completeness"
+    Returns None when the description doesn't match.
+    """
+    m = re.match(r"item_\d+_(\w+)\s*\|\s*D\d+\s+(\w+)", description)
+    if not m:
+        return None
+    return m.group(1), m.group(2)
+
+
+def _raw_quality_verdict(row: dict) -> bool | None:
+    """Return True (pass) / False (fail) / None (unreadable) from response.output.
+
+    The human judge encodes the actual quality verdict in the raw output string
+    ('pass' or 'fail').  gradingResult.pass only validates output format, so we
+    read the string directly.
+    """
+    output = (row.get("response") or {}).get("output", "")
+    if isinstance(output, str):
+        normed = output.strip().lower()
+        if normed == "pass":
+            return True
+        if normed == "fail":
+            return False
+    return None
+
+
+def chart_category_quality_heatmap(runs: list[tuple[str, list]], output_dir: str) -> None:
+    """Category × quality-dimension heatmap showing fail rate (%).
+
+    Rows are the 5 DIY categories; columns are the 6 evaluation dimensions plus
+    a synthetic 'Overall Pass' column (item passes only if all 6 dimensions pass).
+    Cell colour runs from white (0 % fail) to deep red (100 % fail).
+
+    Only rows whose testCase.description matches the pattern
+      "item_NNN_<category> | D<N> <dimension>"
+    contribute to this chart.  Files from other judge types are silently skipped.
+    """
+    # dim_verdicts[display_cat][dim] = [True/False, ...]
+    dim_verdicts: dict[str, dict[str, list[bool]]] = defaultdict(lambda: defaultdict(list))
+    # item_verdicts[display_cat][item_run_key][dim] = True/False
+    item_verdicts: dict[str, dict[str, dict[str, bool]]] = (
+        defaultdict(lambda: defaultdict(dict))
+    )
+
+    for path, rows in runs:
+        for row in rows:
+            desc = (row.get("testCase") or {}).get("description", "")
+            parsed = _parse_cat_dim(desc)
+            if parsed is None:
+                continue
+            raw_cat, dim = parsed
+            verdict = _raw_quality_verdict(row)
+            if verdict is None:
+                continue
+
+            display_cat = _CAT_DISPLAY.get(raw_cat, raw_cat.replace("_", " ").title())
+            dim_verdicts[display_cat][dim].append(verdict)
+
+            item_id = desc.split("|")[0].strip()
+            item_key = f"{path}::{item_id}"
+            item_verdicts[display_cat][item_key][dim] = verdict
+
+    if not dim_verdicts:
+        print(
+            "  WARNING: no category×dimension data found — "
+            "descriptions must match 'item_NNN_<cat> | D<N> <dim_name>'"
+        )
+        return
+
+    # Build ordered axis lists
+    all_cats = sorted(
+        dim_verdicts.keys(),
+        key=lambda c: _CAT_ORDER.index(c) if c in _CAT_ORDER else len(_CAT_ORDER),
+    )
+    found_dims = {d for cat in dim_verdicts.values() for d in cat}
+    col_dims = [d for d in _DIM_ORDER if d in found_dims]
+    col_dims += sorted(found_dims - set(col_dims))  # any extra dims last
+    col_dims_with_overall = col_dims + ["overall_pass"]
+
+    # Build fail-rate matrix (percent)
+    matrix = np.zeros((len(all_cats), len(col_dims_with_overall)))
+    for ri, cat in enumerate(all_cats):
+        for ci, dim in enumerate(col_dims):
+            verdicts = dim_verdicts[cat][dim]
+            if verdicts:
+                matrix[ri, ci] = sum(1 for v in verdicts if not v) / len(verdicts) * 100
+
+        # Overall pass: True only when all canonical dims pass for that item
+        overall: list[bool] = []
+        for item_key, dv in item_verdicts[cat].items():
+            if dv:
+                overall.append(all(dv.get(d, True) for d in col_dims))
+        if overall:
+            matrix[ri, len(col_dims)] = sum(1 for v in overall if not v) / len(overall) * 100
+
+    col_labels = [_DIM_LABELS.get(d, d.replace("_", " ").title()) for d in col_dims]
+    col_labels.append("Overall Pass")
+
+    n_cols, n_rows = len(col_dims_with_overall), len(all_cats)
+    fig, ax = plt.subplots(figsize=(max(9, n_cols * 1.55), max(4, n_rows * 0.9 + 2.2)))
+
+    im = ax.imshow(matrix, cmap="Reds", vmin=0, vmax=100, aspect="auto")
+    cbar = fig.colorbar(im, ax=ax, shrink=0.75, pad=0.02)
+    cbar.set_label("Fail Rate (%)", fontsize=10)
+
+    ax.set_xticks(range(n_cols))
+    ax.set_xticklabels(col_labels, rotation=30, ha="right", fontsize=9)
+    ax.set_yticks(range(n_rows))
+    ax.set_yticklabels(all_cats, fontsize=10)
+    ax.set_xlabel("Qualities", fontsize=11, labelpad=8)
+    ax.set_ylabel("Categories", fontsize=11, labelpad=8)
+
+    run_count = len(runs)
+    ax.set_title(
+        f"Heatmap of Failed Quality by Category — {run_count} run(s)",
+        fontsize=12, pad=12,
+    )
+
+    # Annotate each cell with its value
+    for ri in range(n_rows):
+        for ci in range(n_cols):
+            val = matrix[ri, ci]
+            text_color = "white" if val > 55 else "black"
+            ax.text(
+                ci, ri, f"{val:.1f}",
+                ha="center", va="center",
+                fontsize=10, color=text_color, fontweight="bold",
+            )
+
+    plt.tight_layout()
+    _save(fig, output_dir, "category_quality_heatmap.png")
+
+
+# ---------------------------------------------------------------------------
 # Shared save helper
 # ---------------------------------------------------------------------------
 
@@ -250,6 +429,7 @@ CHART_FNS = {
     "heatmap": chart_heatmap,
     "agreement": chart_agreement,
     "distribution": chart_distribution,
+    "category_quality": chart_category_quality_heatmap,
 }
 
 
