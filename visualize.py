@@ -9,6 +9,9 @@ Charts
   agreement              Stacked pass/fail counts per question across runs/judges
   distribution           Pass vs fail counts per run (stacked bar)
   category_quality       Category × quality-dimension fail-rate heatmap
+  human_llm_agreement    Per-dimension human vs. LLM agreement bar chart (2 files: human, llm)
+  category_distribution  Generated category counts vs. benchmark 20% per category
+  before_after           Paired bars per dimension: baseline vs. corrected run (2 files)
   all                    All of the above (default)
 
 Examples
@@ -410,6 +413,239 @@ def chart_category_quality_heatmap(runs: list[tuple[str, list]], output_dir: str
 
 
 # ---------------------------------------------------------------------------
+# Chart: human vs. LLM agreement per dimension
+# ---------------------------------------------------------------------------
+
+def chart_human_llm_agreement(runs: list[tuple[str, list]], output_dir: str) -> None:
+    """Per-dimension human vs. LLM agreement bar chart.
+
+    Expects 2 runs: runs[0] = human results, runs[1] = LLM results.
+    Matches by test description; only overlapping items contribute.
+    """
+    if len(runs) < 2:
+        print("  WARNING: human_llm_agreement requires 2 files (human, llm) — skipping")
+        return
+
+    def _extract(rows: list[dict]) -> dict[str, bool | None]:
+        out = {}
+        for row in rows:
+            desc = (row.get("testCase") or {}).get("description", "")
+            if desc:
+                out[desc] = _raw_quality_verdict(row)
+        return out
+
+    human_v = _extract(runs[0][1])
+    llm_v   = _extract(runs[1][1])
+    common  = set(human_v) & set(llm_v)
+
+    if not common:
+        print("  WARNING: no matching descriptions between human and LLM results — skipping")
+        return
+
+    dim_agree: dict[str, list[bool]] = defaultdict(list)
+    for desc in common:
+        parsed = _parse_cat_dim(desc)
+        if parsed is None:
+            continue
+        _, dim = parsed
+        hv = human_v[desc]
+        lv = llm_v[desc]
+        if hv is not None and lv is not None:
+            dim_agree[dim].append(hv == lv)
+
+    if not dim_agree:
+        print("  WARNING: no parseable dimension descriptions found — skipping")
+        return
+
+    dims   = [d for d in _DIM_ORDER if d in dim_agree]
+    rates  = [sum(dim_agree[d]) / len(dim_agree[d]) for d in dims]
+    labels = [_DIM_LABELS.get(d, d.replace("_", " ").title()) for d in dims]
+    n_items = len({desc.split("|")[0].strip() for desc in common})
+
+    colors = [PASS_COLOR if r >= 0.80 else FAIL_COLOR for r in rates]
+    fig, ax = plt.subplots(figsize=(max(9, len(dims) * 1.6), 5))
+    bars = ax.bar(range(len(dims)), rates, color=colors, edgecolor="white", width=0.55)
+    ax.axhline(0.80, color="navy", linestyle="--", linewidth=1.2, label="80% target")
+    ax.set_xticks(range(len(dims)))
+    ax.set_xticklabels(labels, rotation=20, ha="right", fontsize=9)
+    ax.set_ylim(0, 1.15)
+    ax.set_ylabel("Agreement rate", fontsize=11)
+    ax.set_title(
+        f"Human vs. LLM Agreement per Dimension  ({n_items} item(s))\n"
+        f"Green ≥ 80% = calibrated; Red < 80% = fix judge prompt (Phase A)",
+        fontsize=11,
+    )
+    ax.legend(fontsize=9)
+    for bar, rate in zip(bars, rates):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                f"{rate:.0%}", ha="center", va="bottom", fontsize=10, fontweight="bold")
+    plt.tight_layout()
+    _save(fig, output_dir, "human_llm_agreement.png")
+
+
+# ---------------------------------------------------------------------------
+# Chart: category distribution vs. benchmark
+# ---------------------------------------------------------------------------
+
+def chart_category_distribution(runs: list[tuple[str, list]], output_dir: str) -> None:
+    """Side-by-side bars: generated category counts vs. benchmark (20% each).
+
+    Uses the first result file. Counts unique items per category extracted
+    from test descriptions. Benchmark = 20% of total (uniform distribution).
+    """
+    BENCHMARK_PCT = 0.20
+
+    _, rows = runs[0]
+    seen_items: set[str] = set()
+    cat_counts: dict[str, int] = defaultdict(int)
+
+    for row in rows:
+        desc = (row.get("testCase") or {}).get("description", "")
+        parsed = _parse_cat_dim(desc)
+        if parsed is None:
+            continue
+        raw_cat, _ = parsed
+        item_id = desc.split("|")[0].strip()
+        if item_id not in seen_items:
+            seen_items.add(item_id)
+            display_cat = _CAT_DISPLAY.get(raw_cat, raw_cat.replace("_", " ").title())
+            cat_counts[display_cat] += 1
+
+    if not cat_counts:
+        print("  WARNING: no category data found for category_distribution chart — skipping")
+        return
+
+    total    = sum(cat_counts.values())
+    cats     = [c for c in _CAT_ORDER if c in cat_counts]
+    cats    += [c for c in sorted(cat_counts) if c not in cats]
+    actual   = [cat_counts.get(c, 0) for c in cats]
+    expected = [round(total * BENCHMARK_PCT) for _ in cats]
+
+    x     = np.arange(len(cats))
+    width = 0.35
+    fig, ax = plt.subplots(figsize=(max(9, len(cats) * 1.9), 5))
+    b1 = ax.bar(x - width / 2, actual,   width, label="Generated",
+                color="#2196F3", edgecolor="white")
+    b2 = ax.bar(x + width / 2, expected, width,
+                label=f"Benchmark ({BENCHMARK_PCT:.0%} each)",
+                color="#9E9E9E", edgecolor="white")
+    ax.set_xticks(x)
+    ax.set_xticklabels(cats, fontsize=10)
+    ax.set_ylabel("Item count", fontsize=11)
+    ax.set_title(
+        f"Category Distribution vs. Benchmark  (total: {total} items)",
+        fontsize=12,
+    )
+    ax.legend(fontsize=9)
+    for xi, (a, e) in enumerate(zip(actual, expected)):
+        pct = a / total if total else 0
+        color = PASS_COLOR if pct >= 0.18 else FAIL_COLOR
+        ax.text(xi - width / 2, a + 0.2, f"{a}\n({pct:.0%})",
+                ha="center", va="bottom", fontsize=8, color=color, fontweight="bold")
+        ax.text(xi + width / 2, e + 0.2, str(e),
+                ha="center", va="bottom", fontsize=8, color="gray")
+    plt.tight_layout()
+    _save(fig, output_dir, "category_distribution.png")
+
+
+# ---------------------------------------------------------------------------
+# Chart: before / after per-dimension pass rate
+# ---------------------------------------------------------------------------
+
+def chart_before_after(runs: list[tuple[str, list]], output_dir: str) -> None:
+    """Paired bars per dimension: baseline vs. corrected pass rates.
+
+    Expects 2 runs: runs[0] = baseline, runs[1] = corrected.
+    Also displays overall pass rate and improvement ratio in the title.
+    """
+    if len(runs) < 2:
+        print("  WARNING: before_after requires 2 files (baseline, corrected) — skipping")
+        return
+
+    def _dim_rates(rows: list[dict]) -> dict[str, float]:
+        dim_results: dict[str, list[bool]] = defaultdict(list)
+        for row in rows:
+            desc = (row.get("testCase") or {}).get("description", "")
+            parsed = _parse_cat_dim(desc)
+            if parsed is None:
+                continue
+            _, dim = parsed
+            verdict = _raw_quality_verdict(row)
+            if verdict is not None:
+                dim_results[dim].append(verdict)
+        return {d: sum(v) / len(v) for d, v in dim_results.items() if v}
+
+    def _overall_pass_rate(rows: list[dict]) -> float:
+        item_dim: dict[str, dict[str, bool]] = defaultdict(dict)
+        for row in rows:
+            desc = (row.get("testCase") or {}).get("description", "")
+            parsed = _parse_cat_dim(desc)
+            if parsed is None:
+                continue
+            _, dim = parsed
+            item_id = desc.split("|")[0].strip()
+            verdict = _raw_quality_verdict(row)
+            if verdict is not None:
+                item_dim[item_id][dim] = verdict
+        complete = [d for d in item_dim.values() if len(d) >= len(_DIM_ORDER)]
+        if not complete:
+            return 0.0
+        passes = sum(1 for d in complete if all(d.get(dim, False) for dim in _DIM_ORDER))
+        return passes / len(complete)
+
+    base_path, base_rows = runs[0]
+    corr_path, corr_rows = runs[1]
+
+    base_rates = _dim_rates(base_rows)
+    corr_rates = _dim_rates(corr_rows)
+    base_overall = _overall_pass_rate(base_rows)
+    corr_overall = _overall_pass_rate(corr_rows)
+
+    dims = [d for d in _DIM_ORDER if d in base_rates or d in corr_rates]
+    if not dims:
+        print("  WARNING: no dimension data found for before_after chart — skipping")
+        return
+
+    before  = [base_rates.get(d, 0.0) for d in dims]
+    after   = [corr_rates.get(d, 0.0) for d in dims]
+    labels  = [_DIM_LABELS.get(d, d.replace("_", " ").title()) for d in dims]
+
+    base_fail = 1 - base_overall
+    corr_fail = 1 - corr_overall
+    improvement = (base_fail - corr_fail) / base_fail if base_fail > 0 else 0.0
+
+    x     = np.arange(len(dims))
+    width = 0.35
+    fig, ax = plt.subplots(figsize=(max(10, len(dims) * 1.9), 5))
+    ax.bar(x - width / 2, before, width,
+           label=f"Baseline  (overall {base_overall:.0%})",
+           color=FAIL_COLOR, alpha=0.85, edgecolor="white")
+    ax.bar(x + width / 2, after,  width,
+           label=f"Corrected (overall {corr_overall:.0%})",
+           color=PASS_COLOR, alpha=0.85, edgecolor="white")
+    ax.axhline(0.80, color="navy", linestyle="--", linewidth=1.0, alpha=0.7,
+               label="80% threshold")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=20, ha="right", fontsize=9)
+    ax.set_ylim(0, 1.18)
+    ax.set_ylabel("Pass rate", fontsize=11)
+    ax.set_title(
+        f"Before / After Pass Rate per Dimension\n"
+        f"Failure rate: {base_fail:.0%} → {corr_fail:.0%}  "
+        f"(improvement ratio: {improvement:.0%})",
+        fontsize=11,
+    )
+    ax.legend(fontsize=8)
+    for xi, (b, a) in enumerate(zip(before, after)):
+        ax.text(xi - width / 2, b + 0.02, f"{b:.0%}",
+                ha="center", va="bottom", fontsize=8, color="darkred")
+        ax.text(xi + width / 2, a + 0.02, f"{a:.0%}",
+                ha="center", va="bottom", fontsize=8, color="darkgreen")
+    plt.tight_layout()
+    _save(fig, output_dir, "before_after.png")
+
+
+# ---------------------------------------------------------------------------
 # Shared save helper
 # ---------------------------------------------------------------------------
 
@@ -425,11 +661,14 @@ def _save(fig: plt.Figure, output_dir: str, name: str) -> None:
 # ---------------------------------------------------------------------------
 
 CHART_FNS = {
-    "pass_rate": chart_pass_rate,
-    "heatmap": chart_heatmap,
-    "agreement": chart_agreement,
-    "distribution": chart_distribution,
-    "category_quality": chart_category_quality_heatmap,
+    "pass_rate":             chart_pass_rate,
+    "heatmap":               chart_heatmap,
+    "agreement":             chart_agreement,
+    "distribution":          chart_distribution,
+    "category_quality":      chart_category_quality_heatmap,
+    "human_llm_agreement":   chart_human_llm_agreement,
+    "category_distribution": chart_category_distribution,
+    "before_after":          chart_before_after,
 }
 
 
