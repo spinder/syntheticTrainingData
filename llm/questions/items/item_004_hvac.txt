@@ -1,0 +1,66 @@
+--- Q&A ITEM ---
+question: My central AC runs constantly but the house won't cool below 78°F — the air from the vents feels only slightly cool. What should I check first?
+
+answer: |
+  Tools needed: replacement air filter (match the size printed on the old filter's frame),
+  flashlight, indoor thermometer, garden hose, screwdriver (if opening air handler panel).
+
+  1. Check and replace the air filter first. Locate the filter at the return-air grille
+     (large louvered vent, usually in a hallway ceiling) or at the air handler unit itself.
+     Slide out the old filter and hold it up to light — if you cannot see light through it,
+     it is clogged. Insert the new filter with the arrow on the frame pointing toward the
+     air handler (direction of airflow). A clogged filter causes roughly half of all
+     "runs but won't cool" service calls and takes under two minutes to fix.
+  2. Check the thermostat. Confirm it is set to COOL, the setpoint is below current room
+     temperature, and the fan is set to AUTO (not ON). When ON is selected, the fan runs
+     continuously and circulates uncooled air between compressor cycles, making supply air
+     feel warm even when the system is working correctly.
+  3. Inspect the outdoor condenser unit. Confirm the large fan on top is spinning during
+     operation. Clear leaves, grass clippings, or debris from the sides and top. Use a
+     garden hose with a gentle spray to rinse dirt off the fins from the inside outward
+     (push debris out, not deeper in). Fins are fragile aluminum — do not use high pressure.
+  4. Check for a frozen evaporator coil. Turn the system off at the thermostat but leave
+     the fan set to ON. Locate the indoor air handler and feel the large insulated copper
+     line entering it — if it is coated in ice, the coil is frozen. Let the fan run for
+     one to two hours to thaw completely before switching back to COOL mode. A frozen coil
+     is usually caused by a clogged filter or low refrigerant. If freezing recurs after
+     replacing the filter, stop and call a licensed HVAC technician — refrigerant work
+     requires EPA Section 608 certification and must not be attempted by homeowners.
+  5. After completing steps 1–3, run the system for 15 minutes, then measure the
+     supply-air temperature at a vent. It should read 15–20°F below current room
+     temperature. If the delta is smaller than 15°F, the system needs professional service.
+
+equipment_problem: Central AC runs constantly but house stays warm; vent air feels only slightly cool
+
+tools_required:
+  - replacement air filter (match size on old filter frame)
+  - flashlight
+  - indoor thermometer
+  - garden hose (for condenser fin cleaning)
+  - screwdriver (flathead or Phillips, for air handler panel if needed)
+
+steps:
+  - Remove and inspect old air filter; replace if clogged (hold up to light to test)
+  - Confirm thermostat is set to COOL, setpoint below room temp, fan set to AUTO
+  - Inspect outdoor condenser — confirm fan spins and clear debris from fins; rinse fins gently
+  - Check indoor refrigerant line for ice; if frozen, run fan-only for 1–2 hours then restart
+  - After repairs, measure vent supply-air temp — should be 15–20°F below room temperature
+  - Call a licensed HVAC technician if cooling deficit persists (refrigerant requires certification)
+
+safety_info: |
+  Before opening the air handler cabinet or touching any internal components, turn the
+  system completely off at the thermostat AND flip the dedicated AC circuit breaker to OFF
+  at the panel — the air handler contains 240V capacitors that can hold a lethal charge even
+  after the thermostat is turned off. Never attempt to add or recharge refrigerant: R-410A
+  operates at pressures above 600 psi and requires EPA Section 608 certification to handle
+  legally and safely.
+
+tips:
+  - Replace the air filter every 30–90 days depending on household occupancy and pets — set
+    a phone calendar reminder at the same time each quarter so a clogged filter never causes
+    a no-cool call in the middle of summer.
+  - When rinsing condenser fins, always spray from inside the unit outward through the fin
+    coil so debris is pushed out rather than compacted deeper into the coil.
+  - A $10 indoor/outdoor thermometer with a probe lets you measure supply-air temperature at
+    the vent in real time; the 15–20°F delta is a reliable DIY field check that tells you
+    whether a technician visit is actually needed before you book one.

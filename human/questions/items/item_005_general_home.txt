@@ -1,0 +1,71 @@
+--- Q&A ITEM ---
+question: Cold air is leaking around the edges of my front door even when it is fully closed. The weatherstripping looks torn and compressed flat. How do I replace it?
+
+answer: |
+  Tools needed: utility knife or scissors, tape measure, hammer and small finish nails or
+  staple gun, flathead screwdriver, replacement door weatherstripping (foam adhesive-backed
+  or V-strip, sold by the roll at any hardware store), mild soap and water, dry cloth.
+
+  1. Open the door and remove the old weatherstripping from all three sides of the door
+     frame — the top jamb and both side jambs. Adhesive-backed foam strips peel off; pull
+     slowly at a low angle to avoid lifting paint or tearing the wood. V-strip (spring
+     bronze or plastic) is nailed or stapled — use a flathead screwdriver to pop out
+     staples, then pull the strip free.
+  2. Clean the door stop channel or frame surface where the new strip will seat. Wipe off
+     adhesive residue and dust with a damp cloth and mild soap, then dry completely.
+     Adhesive-backed weatherstripping will not bond to a wet or oily surface and will
+     peel off within days if the surface is not clean and dry.
+  3. Measure each side separately — top jamb, hinge-side jamb, and latch-side jamb.
+     Cut the replacement strip about one inch long and trim to exact fit. Slightly long
+     is better than slightly short; any gap defeats the seal.
+  4. For adhesive-backed foam: peel the backing and press firmly into the door stop
+     channel (the narrow ledge the door closes against). Start at a top corner and work
+     down the full length in one continuous motion, keeping the strip centered on the stop.
+  5. For V-strip (spring bronze or rigid vinyl): orient it so the open face of the V
+     faces outside. Nail or staple every four to six inches, flush with the inside edge
+     of the door stop, so the door compresses the strip when closed.
+  6. Close the door slowly and check for even contact along the full length of each side.
+     Test with a lit stick of incense held along the door edge — if smoke wavers, there
+     is still a gap. Reposition adhesive strip while still fresh, or add a thin second
+     layer of foam for a tighter fit.
+  7. Replace the door bottom sweep separately: unscrew the old sweep from the door face,
+     align the new sweep so the rubber blade just brushes the threshold without dragging,
+     and drive the screws down. The sweep seals the gap at the bottom that frame
+     weatherstripping cannot reach.
+
+equipment_problem: Front door leaks cold air around all edges; weatherstripping is torn and compressed flat
+
+tools_required:
+  - utility knife or scissors
+  - tape measure
+  - hammer and small finish nails or staple gun
+  - flathead screwdriver
+  - replacement weatherstripping (foam adhesive or V-strip, sold by the roll)
+  - mild soap and water
+  - dry cloth
+
+steps:
+  - Remove old weatherstripping from top jamb and both side jambs; pop out any staples
+  - Clean door stop surfaces with soap and water; dry completely before applying new strip
+  - Measure each side separately; cut replacement strip slightly long and trim to fit
+  - Install adhesive foam by pressing firmly into door stop channel from corner to corner
+  - Install V-strip with open side facing out, nailed or stapled every 4–6 inches
+  - Close door and test seal; use incense smoke to locate remaining gaps and adjust
+  - Replace door bottom sweep: align rubber blade just touching threshold and screw down
+
+safety_info: |
+  When cutting weatherstripping with a utility knife, always cut away from your body and
+  keep fingers clear of the blade path — the strip can slip unexpectedly on smooth surfaces.
+  Place a scrap board under the material to provide a stable cutting surface and protect
+  the floor. Retract the blade immediately after each cut.
+
+tips:
+  - V-strip (spring bronze) outlasts adhesive foam five to ten times over and is worth the
+    extra cost on a frequently used exterior door; foam is fine for interior doors or
+    low-traffic secondary entrances.
+  - If the door still leaks cold air after replacing weatherstripping, check whether the
+    door has warped or the hinge screws are loose — a door that does not hang square
+    cannot seal evenly regardless of weatherstrip quality.
+  - Buying a complete door seal kit (three-sided weatherstrip plus bottom sweep, around
+    $15–25) guarantees material compatibility and is usually cheaper than buying each
+    component separately.

@@ -1,0 +1,33 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Private tooling — not for the public repo
+.projectHistory/
+.claude/
+memory/
+
+# Judge run output — large/transient; captured in git commit messages instead
+human/logs/
+llm/logs/
+automated/logs/
+
+# Derived outputs
+charts/
+
+# Backup archives created during resets
+generated_data/archive/
+prompts/archive/
+
+# Promptfoo viewer temp files
+.promptfoo-viewer.log
+.promptfoo-viewer.pid
+
+# CLAUDE.md files (project-local AI context)
+CLAUDE.md
+**/CLAUDE.md
+
+# Misc
+.newlineMetadata/
