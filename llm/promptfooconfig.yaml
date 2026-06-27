@@ -1,11 +1,11 @@
-description: LLM judge (Claude) — 6-dimension DIY repair Q&A quality evaluation
+description: LLM judge — 6-dimension DIY repair Q&A quality evaluation (provider set via LLM_PROVIDER env var)
 
 prompts:
   - file://prompts/evaluation_template.txt
 
 providers:
   - id: file://providers/llm_judge_provider.py
-    label: llm-judge-claude
+    label: llm-judge
 
 defaultTest:
   assert:
