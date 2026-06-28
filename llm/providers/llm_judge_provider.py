@@ -52,8 +52,14 @@ def _init():
     if _client is not None:
         return
 
-    _provider = os.environ.get("LLM_PROVIDER", "claude").lower()
-    _model    = os.environ.get("LLM_MODEL") or _PROVIDER_DEFAULTS.get(_provider)
+    # JUDGE_LLM_PROVIDER / JUDGE_LLM_MODEL take precedence over the generation
+    # provider so you can use a faster/cheaper model for judging independently
+    # of the (intentionally weaker) generation model.
+    _provider = (os.environ.get("JUDGE_LLM_PROVIDER")
+                 or os.environ.get("LLM_PROVIDER", "groq")).lower()
+    _model    = (os.environ.get("JUDGE_LLM_MODEL")
+                 or os.environ.get("LLM_MODEL")
+                 or _PROVIDER_DEFAULTS.get(_provider))
 
     if _provider == "claude":
         key = os.environ.get("ANTHROPIC_API_KEY")

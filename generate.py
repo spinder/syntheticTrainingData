@@ -73,7 +73,7 @@ PROVIDER_DEFAULTS: dict[str, str] = {
 DEFAULT_PROVIDER         = os.environ.get("LLM_PROVIDER", "claude").lower()
 DEFAULT_ITEMS_PER_CATEGORY = 12      # 60 total; above the ≥50 target
 MAX_RETRIES_PER_SLOT     = 4
-INTER_REQUEST_DELAY      = 0.5       # seconds between API calls
+INTER_REQUEST_DELAY      = 0.0       # Groq's 429 backoff handles pacing; no artificial delay needed
 
 # ---------------------------------------------------------------------------
 # Categories
@@ -228,7 +228,7 @@ def generate_one(
     prompt = generation_prompt.format(category_label=CATEGORY_LABELS[category])
     kwargs = dict(
         model=model,
-        max_tokens=2000,
+        max_tokens=1200,
         messages=[{"role": "user", "content": prompt}],
         response_model=HomeDiyRepairQA,
     )

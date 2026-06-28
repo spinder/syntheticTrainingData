@@ -168,6 +168,39 @@ def _pause(title: str, body: str) -> None:
     input("\n  Press Enter when done → ")
     print()
 
+def _make_judge_env(args) -> dict:
+    """Return an env dict with JUDGE_LLM_PROVIDER/MODEL injected for subprocess calls."""
+    env = os.environ.copy()
+    # Explicit --judge-provider flag takes precedence, then JUDGE_LLM_PROVIDER env var,
+    # then fall back to the generation provider so behaviour is always deterministic.
+    jp = getattr(args, "judge_provider", "") or os.environ.get("JUDGE_LLM_PROVIDER", "")
+    jm = getattr(args, "judge_model", "")    or os.environ.get("JUDGE_LLM_MODEL", "")
+    if jp:
+        env["JUDGE_LLM_PROVIDER"] = jp
+        key_var = PROVIDER_DEFAULTS.get(jp, {}).get("key_var", "")
+        if key_var and not env.get(key_var):
+            sys.exit(f"ERROR: {key_var} is not set (required for judge provider '{jp}')")
+    if jm:
+        env["JUDGE_LLM_MODEL"] = jm
+    return env
+
+
+def _run_judge(gated_path: str, args, extra_flags: list | None = None) -> int:
+    """Run batch_judge.py with the correct judge env injected. Returns exit code."""
+    env  = _make_judge_env(args)
+    jp   = env.get("JUDGE_LLM_PROVIDER") or getattr(args, "provider", "groq")
+    jm   = env.get("JUDGE_LLM_MODEL") or PROVIDER_DEFAULTS.get(jp, {}).get("model", "default")
+    print(f"  Judge provider : {jp}  ({jm})")
+    cmd  = [sys.executable, str(ROOT / "batch_judge.py"), str(ROOT / gated_path)]
+    if extra_flags:
+        cmd += extra_flags
+    print(f"\n  $ {' '.join(str(c) for c in cmd)}")
+    t0 = time.time()
+    r  = subprocess.run([str(c) for c in cmd], cwd=ROOT, env=env)
+    print(f"  {'✓' if r.returncode in (0, 1) else '✗'} Exit {r.returncode}  ({_elapsed(time.time() - t0)})")
+    return r.returncode
+
+
 def _check_agreement(path: Path) -> tuple[bool, dict]:
     if not path.exists():
         return False, {}
@@ -238,9 +271,11 @@ def _collect_failure_notes(dim_key: str, dim_num: int) -> str:
 
 
 def _call_llm(prompt_text: str) -> str:
-    """Call the configured LLM provider and return the text response."""
-    provider = os.getenv("LLM_PROVIDER", "groq").lower()
-    model    = os.getenv("LLM_MODEL", PROVIDER_DEFAULTS.get(provider, {}).get("model", ""))
+    """Call the configured LLM provider and return the text response.
+    Uses JUDGE_LLM_PROVIDER/JUDGE_LLM_MODEL if set, else falls back to LLM_PROVIDER."""
+    provider = (os.getenv("JUDGE_LLM_PROVIDER") or os.getenv("LLM_PROVIDER", "groq")).lower()
+    model    = (os.getenv("JUDGE_LLM_MODEL") or os.getenv("LLM_MODEL")
+                or PROVIDER_DEFAULTS.get(provider, {}).get("model", ""))
 
     if provider == "groq":
         try:
@@ -453,7 +488,7 @@ def step4_llm_judge(state: dict, args) -> None:
     if not gated:
         sys.exit("ERROR: no gated JSONL in state — run Step 2 first")
 
-    _run([sys.executable, ROOT / "batch_judge.py", ROOT / gated], ok_codes=(0, 1))
+    _run_judge(gated, args)
 
     latest = _newest("llm/logs/*-batch-*-results.json")
     if latest:
@@ -596,10 +631,10 @@ def step6a_calibration(state: dict, args) -> None:
   └─────────────────────────────────────────────────────────────────┘"""
         _pause(f"Phase A loop {loop} — fix '{worst_dim}' rubric", body)
 
-        # Re-run LLM judge on same gated JSONL
+        # Re-run LLM judge on same gated JSONL (uses same judge provider as Step 4)
         gated = state["files"].get("gated_jsonl")
         print("  Re-running LLM judge on same gated JSONL …")
-        _run([sys.executable, ROOT / "batch_judge.py", ROOT / gated], ok_codes=(0, 1))
+        _run_judge(gated, args)
         latest_llm = _newest("llm/logs/*-batch-*-results.json")
         if latest_llm:
             state["files"]["llm_results"] = str(latest_llm.relative_to(ROOT))
@@ -682,6 +717,8 @@ def step6b_correction(state: dict, args) -> None:
         per_category=args.per_category,
         provider=args.provider,
         model=args.model,
+        judge_provider=args.judge_provider,
+        judge_model=args.judge_model,
         human_count=args.human_count,
         auto_correct=args.auto_correct,
     )
@@ -755,6 +792,16 @@ def main() -> None:
                    help="Override model name (uses provider default if omitted)")
     p.add_argument("--human-count", type=int, default=20,
                    help="Items to label in human batch (default: 20)")
+    p.add_argument("--judge-provider", default="",
+                   choices=[""] + list(PROVIDER_DEFAULTS),
+                   help=(
+                       "LLM provider for the judge (Step 4) and auto-correct synthesis. "
+                       "Defaults to --provider (same as generator) if not set. "
+                       "Set this to a faster/smarter model (e.g. openai) while keeping "
+                       "a weak generator (groq) to preserve baseline failure rates."
+                   ))
+    p.add_argument("--judge-model", default="",
+                   help="Override model for the judge. Uses judge-provider default if omitted.")
     p.add_argument("--auto-correct", action="store_true",
                    help=(
                        "Phase B: use LLM to analyse the worst segment×dimension and suggest "
@@ -790,8 +837,15 @@ def main() -> None:
     print("  Home DIY Repair  —  Pipeline Orchestrator")
     _hr()
     prov_info = f"{args.provider}  ({args.model})" if args.model else args.provider
+    judge_info = ""
+    if args.judge_provider:
+        jm = args.judge_model or PROVIDER_DEFAULTS.get(args.judge_provider, {}).get("model", "default")
+        judge_info = f"{args.judge_provider}  ({jm})"
+    else:
+        judge_info = f"{prov_info}  [same as generator]"
     print(f"  Prompt       : {args.prompt_file}")
-    print(f"  Provider     : {prov_info}")
+    print(f"  Generator    : {prov_info}")
+    print(f"  Judge        : {judge_info}")
     print(f"  Items        : {args.per_category * 5} total  ({args.per_category}/category)")
     print(f"  Human labels : {args.human_count} items")
     print(f"  Auto-correct : {'ON  (LLM suggests Phase B prompt fixes)' if args.auto_correct else 'OFF (manual Phase B)'}")
