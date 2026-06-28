@@ -29,5 +29,11 @@ prompts/archive/
 CLAUDE.md
 **/CLAUDE.md
 
+# Pipeline state (session-specific paths and timestamps)
+.pipeline_state.json
+
+# Exported label records (generated output, not source)
+analysis/
+
 # Misc
 .newlineMetadata/
