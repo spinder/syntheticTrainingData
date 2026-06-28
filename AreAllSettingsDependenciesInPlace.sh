@@ -140,6 +140,42 @@ echo -e "${BOLD}║   Pipeline Readiness Check — Home DIY Repair Synthetic Dat
 echo -e "${BOLD}╚══════════════════════════════════════════════════════════════════╝${RESET}"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SECTION 0 — Setup paths (always shown first so you know what to run BEFORE
+#             looking at the check results below)
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}  HOW TO GET READY — run one of these setups in your shell first,${RESET}"
+echo -e "${BOLD}  then re-run this script to confirm all checks pass.${RESET}"
+echo ""
+echo -e "  ${BOLD}╔─ OPTION 1 — Split Provider  (Recommended) ────────────────────────╗${RESET}"
+echo -e "  ${BOLD}║${RESET}  Generator : Groq / llama-3.1-8b-instant  (weak → real failures)  ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}  Judge     : OpenAI / gpt-4o-mini          (fast + accurate)        ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}  Why split? A strong model as generator follows even a weak prompt  ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}  well enough to produce < 15% failures, making the ≥ 80%            ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}  improvement target unreachable.                                     ${BOLD}║${RESET}"
+echo -e "  ${BOLD}╠───────────────────────────────────────────────────────────────────╣${RESET}"
+echo -e "  ${BOLD}║${RESET}${GREEN}    1. source .projectHistory/setLlmKeyValueGroq.sh${RESET}               ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${GREEN}       → sets GROQ_API_KEY + LLM_PROVIDER=groq + LLM_MODEL${RESET}        ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${GREEN}    2. source .projectHistory/setJudgeProvider_openai.sh${RESET}          ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${GREEN}       → sets OPENAI_API_KEY + JUDGE_LLM_PROVIDER + JUDGE_LLM_MODEL${RESET} ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${GREEN}    3. bash AreAllSettingsDependenciesInPlace.sh   ← confirm${RESET}       ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${GREEN}    4. python3 run_pipeline.py --auto-correct${RESET}                      ${BOLD}║${RESET}"
+echo -e "  ${BOLD}╚───────────────────────────────────────────────────────────────────╝${RESET}"
+echo ""
+echo -e "  ${BOLD}╔─ OPTION 2 — Single Provider  (Simpler) ───────────────────────────╗${RESET}"
+echo -e "  ${BOLD}║${RESET}  Both generator and judge use Groq / llama-3.1-8b-instant.         ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}  Trade-off: Step 4 (360 judge calls) is rate-limited by Groq's     ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}  free tier → ~22 min instead of ~5 min.                            ${BOLD}║${RESET}"
+echo -e "  ${BOLD}╠───────────────────────────────────────────────────────────────────╣${RESET}"
+echo -e "  ${BOLD}║${RESET}${CYAN}    1. source .projectHistory/setLlmKeyValueGroq.sh${RESET}               ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${CYAN}       → sets GROQ_API_KEY + LLM_PROVIDER=groq + LLM_MODEL${RESET}        ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${CYAN}    2. bash AreAllSettingsDependenciesInPlace.sh   ← confirm${RESET}       ${BOLD}║${RESET}"
+echo -e "  ${BOLD}║${RESET}${CYAN}    3. python3 run_pipeline.py --auto-correct${RESET}                      ${BOLD}║${RESET}"
+echo -e "  ${BOLD}╚───────────────────────────────────────────────────────────────────╝${RESET}"
+echo ""
+echo -e "  ${BOLD}─── Checking your current state ────────────────────────────────────${RESET}"
+
+# ─────────────────────────────────────────────────────────────────────────────
 hdr "1. LLM Environment Variables"
 
 # Generator
@@ -173,9 +209,9 @@ SPLIT_MODE=false
 if [[ -z "$JUDGE_PROVIDER" ]]; then
     warn "JUDGE_LLM_PROVIDER is not set — judge will use the same provider as the generator"
     warn "  (This is fine for a single-provider run, but may be slow.)"
-    tip  "To split: source .projectHistory/setJudgeProvider_openai.sh"
-    tip  "  or run the one-shot recommended config:"
-    tip  "  source .projectHistory/setProviders_recommended.sh"
+    tip  "To use split providers (recommended — see Option 1 above):"
+    tip  "  source .projectHistory/setLlmKeyValueGroq.sh"
+    tip  "  source .projectHistory/setJudgeProvider_openai.sh"
     add_suggestion "Consider setting JUDGE_LLM_PROVIDER=openai for faster judging"
     note_warning
 else
@@ -297,10 +333,9 @@ done
 hdr "5. Setup Scripts"
 
 SETUP_SCRIPTS=(
-    ".projectHistory/setLlmKeyValueGroq.sh:Set GROQ_API_KEY + generator provider"
-    ".projectHistory/setLlmKeyValueOpenAi.sh:Set OPENAI_API_KEY + provider"
-    ".projectHistory/setJudgeProvider_openai.sh:Set JUDGE_LLM_PROVIDER=openai (separate judge)"
-    ".projectHistory/setProviders_recommended.sh:One-shot recommended split-provider config"
+    ".projectHistory/setLlmKeyValueGroq.sh:Set GROQ_API_KEY + generator provider (Option 1 step 1)"
+    ".projectHistory/setJudgeProvider_openai.sh:Set OPENAI_API_KEY + JUDGE_LLM_PROVIDER (Option 1 step 2)"
+    ".projectHistory/setLlmKeyValueOpenAi.sh:Set OPENAI_API_KEY (used internally by setJudgeProvider_openai.sh)"
 )
 
 for entry in "${SETUP_SCRIPTS[@]}"; do
@@ -401,8 +436,9 @@ if [[ $ERRORS -eq 0 ]] && $GEN_KEY_OK && $JUDGE_KEY_OK && $LLM_PROVIDER_SET; the
             echo "    • Consider: keep this provider as judge, use groq for generation"
         fi
         echo ""
-        echo -e "  ${BOLD}To split providers (recommended):${RESET}"
-        echo "    source .projectHistory/setProviders_recommended.sh"
+        echo -e "  ${BOLD}To split providers (recommended — Option 1 above):${RESET}"
+        echo "    source .projectHistory/setLlmKeyValueGroq.sh"
+        echo "    source .projectHistory/setJudgeProvider_openai.sh"
         echo "    bash AreAllSettingsDependenciesInPlace.sh   # re-check"
         echo ""
         echo -e "  ${BOLD}Run anyway (single provider):${RESET}"
@@ -411,47 +447,69 @@ if [[ $ERRORS -eq 0 ]] && $GEN_KEY_OK && $JUDGE_KEY_OK && $LLM_PROVIDER_SET; the
 else
     echo -e "  ${RED}${BOLD}✗ NOT READY — ${ERRORS} error(s) must be fixed before running${RESET}"
     echo ""
+    echo -e "  ${BOLD}Run these in order, then re-run this script:${RESET}"
+    echo ""
 
-    if ! $LLM_PROVIDER_SET; then
-        echo -e "  ${RED}Missing: LLM_PROVIDER${RESET}"
-        tip "source .projectHistory/setLlmKeyValueGroq.sh"
+    STEP=1
+
+    # Missing packages — do first so the environment is complete before keys are loaded
+    if [[ ${#MISSING_PKGS[@]} -gt 0 ]]; then
+        echo -e "  ${CYAN}  ${STEP}.${RESET} Install missing Python packages:"
+        echo      "       pip install ${MISSING_PKGS[*]}"
+        (( STEP++ ))
+        echo ""
     fi
 
-    if ! $GEN_KEY_OK && [[ -n "$GEN_KEY_VAR" ]]; then
-        echo -e "  ${RED}Missing: ${GEN_KEY_VAR} (for generator provider '${GEN_PROVIDER}')${RESET}"
+    # Generator provider / key
+    if ! $LLM_PROVIDER_SET || { ! $GEN_KEY_OK && [[ -n "$GEN_KEY_VAR" ]]; }; then
+        echo -e "  ${CYAN}  ${STEP}.${RESET} Load generator credentials (sets LLM_PROVIDER + API key):"
         case "$GEN_PROVIDER" in
-            groq)
-                tip "source .projectHistory/setLlmKeyValueGroq.sh"
-                tip "  — or —  export GROQ_API_KEY='gsk_...'"
+            groq|"")
+                echo "       source .projectHistory/setLlmKeyValueGroq.sh"
                 ;;
             openai)
-                tip "source .projectHistory/setLlmKeyValueOpenAi.sh"
-                tip "  — or —  export OPENAI_API_KEY='sk-...'"
+                echo "       source .projectHistory/setLlmKeyValueOpenAi.sh"
                 ;;
             claude)
-                tip "export ANTHROPIC_API_KEY='sk-ant-...'"
+                echo "       export ANTHROPIC_API_KEY='sk-ant-...'"
+                echo "       export LLM_PROVIDER=claude"
+                ;;
+            deepseek)
+                echo "       export DEEPSEEK_API_KEY='sk-...'"
+                echo "       export LLM_PROVIDER=deepseek"
                 ;;
         esac
+        (( STEP++ ))
+        echo ""
     fi
 
+    # Judge provider / key (only if split mode was requested but key is missing)
     if $SPLIT_MODE && ! $JUDGE_KEY_OK && [[ -n "${JUDGE_KEY_VAR:-}" ]]; then
-        echo -e "  ${RED}Missing: ${JUDGE_KEY_VAR} (for judge provider '${JUDGE_PROVIDER}')${RESET}"
+        echo -e "  ${CYAN}  ${STEP}.${RESET} Load judge credentials (sets JUDGE_LLM_PROVIDER + API key):"
         case "$JUDGE_PROVIDER" in
             openai)
-                tip "source .projectHistory/setLlmKeyValueOpenAi.sh"
-                tip "  — or —  export OPENAI_API_KEY='sk-...'"
+                echo "       source .projectHistory/setJudgeProvider_openai.sh"
                 ;;
             groq)
-                tip "source .projectHistory/setLlmKeyValueGroq.sh"
+                echo "       source .projectHistory/setLlmKeyValueGroq.sh"
+                echo "       export JUDGE_LLM_PROVIDER=groq"
                 ;;
         esac
+        (( STEP++ ))
+        echo ""
     fi
 
-    if [[ ${#MISSING_PKGS[@]} -gt 0 ]]; then
+    # If neither provider is set at all, show the two-step recommended path
+    if ! $LLM_PROVIDER_SET; then
+        echo -e "  ${CYAN}  TIP:${RESET} For the recommended split-provider setup (Option 1 above):"
+        echo "       source .projectHistory/setLlmKeyValueGroq.sh"
+        echo "       source .projectHistory/setJudgeProvider_openai.sh"
         echo ""
-        echo -e "  ${RED}Missing Python packages: ${MISSING_PKGS[*]}${RESET}"
-        tip "pip install ${MISSING_PKGS[*]}"
     fi
+
+    echo -e "  ${CYAN}  ${STEP}.${RESET} Re-run this check:"
+    echo      "       bash AreAllSettingsDependenciesInPlace.sh"
+    echo ""
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
