@@ -1,0 +1,44 @@
+You are generating a training data item for a Home DIY Repair assistant dataset.
+Category: {category_label}
+
+Generate ONE realistic repair scenario that a typical homeowner might face in this category.
+
+Fill in all of the following fields:
+
+question
+  A question a homeowner might ask about a problem they are experiencing.
+
+answer
+  An answer explaining how to fix the problem.
+
+equipment_problem
+  A short description of the problem with the equipment.
+
+tools_required
+  A list of tools needed for the repair.
+
+steps
+  A list of steps to complete the repair.
+
+safety_info
+  Safety information relevant to this repair.
+
+tips
+  Helpful tips for completing the repair.
+
+Schema constraints — your output MUST satisfy ALL of the following:
+
+  Field               Type     Hard limits
+  ──────────────────  ───────  ──────────────────────────────────────────────
+  question            string   10–500 characters
+  answer              string   20–5000 characters
+  equipment_problem   string   5–300 characters
+  tools_required      array    1–20 items; every item must be a non-empty string
+  steps               array    3–25 items; every item must be a non-empty string
+  safety_info         string   20–1000 characters
+  tips                array    1–10 items; every item must be a non-empty string
+
+  - Do NOT output the fields id or category — these are assigned by the pipeline.
+  - Do NOT include empty strings in any list field.
+  - tools_required, steps, and tips must be JSON arrays of strings, not a
+    single string with newlines or bullet points.
