@@ -359,6 +359,34 @@ def _auto_correct_prompt(state: dict, next_variant: str) -> Path | None:
 
     dim_def = DIM_DEFINITIONS.get(worst_dim, f"D{dim_num}: {worst_dim}")
 
+    # Load the gate's banned phrase lists so the LLM never uses them in examples.
+    # A positive example containing a banned phrase teaches the model to output that
+    # phrase, causing every generated item to be silently dropped at the gate.
+    try:
+        sys.path.insert(0, str(ROOT))
+        from quality_gate import (  # noqa: PLC0415
+            D2_GENERIC_PHRASES as _D2,
+            D6_GENERIC_PHRASES as _D6,
+            D3_TRADE_PHRASES   as _D3,
+        )
+        _d2 = ", ".join(f'"{p}"' for p in sorted(_D2))
+        _d6 = ", ".join(f'"{p}"' for p in sorted(_D6))
+        _d3 = ", ".join(f'"{p}"' for p in sorted(_D3))
+        forbidden_block = (
+            "\n## CRITICAL — Forbidden phrases (quality gate hard-rejects these)\n"
+            "The quality gate automatically drops items whose safety_info contains any of:\n"
+            f"  {_d2}\n"
+            "Items whose tips contain any of:\n"
+            f"  {_d6}\n"
+            "Items whose tools_required contains any of:\n"
+            f"  {_d3}\n"
+            "NEVER use any of these phrases in your suggested addition — not even inside a\n"
+            "positive 'for example' sentence. If your suggestion contains one of these phrases,\n"
+            "the generator will learn that pattern and every item will be silently dropped.\n"
+        )
+    except Exception:
+        forbidden_block = ""
+
     synthesis_prompt = f"""You are a prompt engineer improving a Home DIY Repair Q&A data generator.
 
 ## Current generation prompt
@@ -371,14 +399,14 @@ def _auto_correct_prompt(state: dict, next_variant: str) -> Path | None:
 
 ## What human reviewers flagged as failures
 {notes_section}
-
+{forbidden_block}
 ## Your task
 Write a SHORT, TARGETED addition (2–5 sentences) to INSERT into the generation prompt
 that specifically fixes the failing dimension for the {full_cat.replace("_", " ")} category.
 
 Rules:
 - Be concrete: tell the LLM exactly what a PASSING response looks like
-- One brief inline example is fine if it clarifies the rule
+- One brief inline example is fine if it clarifies the rule — but it must not contain any phrase from the CRITICAL forbidden list above
 - Do NOT rewrite the whole prompt; do NOT add rules for other dimensions
 - Output ONLY the addition text — no headers, no explanation, no preamble."""
 
