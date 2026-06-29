@@ -865,12 +865,12 @@ def main() -> None:
     print("  Home DIY Repair  —  Pipeline Orchestrator")
     _hr()
     prov_info = f"{args.provider}  ({args.model})" if args.model else args.provider
-    judge_info = ""
-    if args.judge_provider:
-        jm = args.judge_model or PROVIDER_DEFAULTS.get(args.judge_provider, {}).get("model", "default")
-        judge_info = f"{args.judge_provider}  ({jm})"
-    else:
-        judge_info = f"{prov_info}  [same as generator]"
+    _eff_jp = args.judge_provider or os.environ.get("JUDGE_LLM_PROVIDER", "")
+    _eff_jm = (args.judge_model
+               or os.environ.get("JUDGE_LLM_MODEL", "")
+               or PROVIDER_DEFAULTS.get(_eff_jp, {}).get("model", "default"))
+    judge_info = (f"{_eff_jp}  ({_eff_jm})" if _eff_jp
+                  else f"{prov_info}  [same as generator]")
     print(f"  Prompt       : {args.prompt_file}")
     print(f"  Generator    : {prov_info}")
     print(f"  Judge        : {judge_info}")
