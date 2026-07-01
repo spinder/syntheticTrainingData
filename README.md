@@ -24,7 +24,7 @@ The dataset domain is Home DIY Repair Q&A. The engineering domain is everything 
 
 The pipeline generates 60-item batches of structured repair Q&A, gates them through a quality pre-filter, scores them with an LLM judge across 6 dimensions, verifies that judge against human labels, and iterates on the generation prompt until the failure rate drops by ≥80% from baseline.
 
-The baseline run used a deliberately weak model (Groq `llama-3.1-8b-instant`) with a minimal prompt to establish a measurable starting failure rate. The corrected run achieved an **88.3% reduction in failure rate** (9.4% → 1.1%).
+The baseline run used an intentionally minimal generator configuration (Groq `llama-3.1-8b-instant` with a schema-only prompt) to establish a measurable starting failure rate. The corrected run achieved an **88.3% reduction in failure rate** (9.4% → 1.1%).
 
 See [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md) for why the architecture looks the way it does.
 See [`docs/blog-synthetic-data-pipeline.md`](docs/blog-synthetic-data-pipeline.md) for the engineering narrative.
@@ -161,9 +161,9 @@ python3 -m http.server 8080
 
 The blog is configured for Jekyll rendering via GitHub Pages. To publish:
 
-**1. Ensure the three blog images are committed** (they are gitignore-excepted):
+**1. Ensure the blog and its images are committed:**
 ```bash
-git add charts/baselineHeatmap.png charts/beforeAfterPassRate.png charts/autoCorrectTerminal.png
+git add docs/charts/baselineHeatmap.png docs/charts/beforeAfterPassRate.png docs/charts/autoCorrectTerminal.png
 git add docs/blog-synthetic-data-pipeline.md docs/preview.py
 git commit -m "i)adding blog post, preview helper, and blog chart images."
 ```
@@ -179,10 +179,9 @@ git commit -m "i)adding blog post, preview helper, and blog chart images."
 https://spinder.github.io/syntheticTrainingData/blog-synthetic-data-pipeline
 ```
 
-> **Image paths:** The blog uses relative paths (`../charts/filename.png`). These work
-> for both GitHub.com file preview and GitHub Pages rendering when Pages is served from
-> `/docs`. If you later add a `baseurl` to `docs/_config.yml`, update image references
-> to use `{{ site.baseurl }}/charts/filename.png` instead.
+> **Image paths:** The blog images are in `docs/charts/` so they are included in the
+> GitHub Pages source root (`/docs`). The blog uses relative paths (`charts/filename.png`)
+> which resolve correctly for GitHub.com file preview, GitHub Pages, and local preview.
 
 ---
 

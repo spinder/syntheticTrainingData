@@ -186,3 +186,7 @@ When multiple variables change between measurement points, the measurement is co
 
 **The honest failure mode:**
 This project's iter3 results (1.1% failure rate) reflect both the prompt correction and a generator model upgrade. The 88.3% improvement claim is accurate as measured; its attribution to the prompt change alone is overstated. Documenting this explicitly is part of honest engineering practice.
+
+---
+
+*← [README](README.md) · [Architecture](ARCHITECTURE.md) · [Design Decisions](DESIGN_DECISIONS.md)*

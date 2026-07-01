@@ -282,3 +282,7 @@ charts/
 ```
 
 This makes every run independently reproducible and every artifact traceable to the generation parameters and timestamp that produced it.
+
+---
+
+*← [README](README.md) · [Design Decisions](DESIGN_DECISIONS.md) · [Engineering Principles](ENGINEERING_PRINCIPLES.md)*

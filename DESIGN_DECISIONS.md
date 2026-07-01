@@ -9,14 +9,14 @@ This document records the major architectural and engineering decisions made dur
 **Decision**: Use independent environment variables (`JUDGE_LLM_PROVIDER` / `JUDGE_LLM_MODEL`) for the evaluation judge, separate from the generator (`LLM_PROVIDER` / `LLM_MODEL`).
 
 **Why it matters**: The generator and judge have opposite quality requirements:
-- The generator needs a *weak* model. The project measures improvement from a baseline failure rate. A strong model follows a weak prompt well enough to produce near-perfect output, which produces a near-zero baseline failure rate and makes the ≥80% improvement target unreachable. The weak model isn't a limitation — it's a controlled variable.
+- The generator needs a deliberately constrained model configuration. The project measures improvement from a baseline failure rate. A capable model following a minimal prompt may produce near-perfect output, collapsing the baseline failure rate and making the ≥80% improvement target unreachable. The constrained configuration isn't a limitation — it's a controlled variable.
 - The judge needs a *consistent, accurate* model. Measurement reliability depends on the judge making the same call the same way on equivalent items. A stronger model produces more consistent verdicts.
 
-**How it surfaced**: The original implementation used a single `LLM_PROVIDER` for both. When rate-limiting on Groq's free tier (6K TPM) created pressure to switch to a paid OpenAI model, the effect on the baseline measurement became clear: switching `LLM_PROVIDER` to `gpt-4o-mini` would make the judge more accurate *and* the generator produce better output. The improvement measurement would be confounded.
+**How it surfaced**: The original implementation used a single `LLM_PROVIDER` for both. When rate-limiting on Groq's free tier (6K TPM) created pressure to switch to a paid OpenAI model, the effect on the baseline measurement became clear: switching `LLM_PROVIDER` to `gpt-4o-mini` would make the judge more accurate *and* the generator produce higher-quality output. The improvement measurement would be confounded.
 
 **Implementation**: `llm_judge_provider.py` reads `JUDGE_LLM_PROVIDER` first, falling back to `LLM_PROVIDER`. `run_pipeline.py` accepts `--judge-provider` / `--judge-model` flags and propagates them to every subprocess call that invokes the judge. Neither file has a hardcoded provider choice.
 
-**Tradeoff accepted**: Two env var pairs instead of one adds setup friction. The setup scripts (`setLlmKeyValueGroq.sh`, `setJudgeProvider_openai.sh`) mitigate this. A unified config file would be cleaner for production; env vars were chosen to avoid adding a config parsing dependency.
+**Tradeoff accepted**: Two env var pairs instead of one adds setup friction. The `AreAllSettingsDependenciesInPlace.sh` validation script mitigates this by checking that all required vars are set before the pipeline runs. A unified config file would be cleaner for production; env vars were chosen to avoid adding a config parsing dependency.
 
 ---
 
@@ -132,3 +132,7 @@ forbidden_block = (
 | Auto-correct synthesizes one correction per loop | Multiple failing dimensions per run → multiple loops needed | Acceptable for current iteration count |
 | `iteration_log.md` requires manual updates | Entries can fall out of sync with actual runs | Future: auto-generate from `.pipeline_state.json` entries |
 | Duplicate rate (~15% in iter3) signals over-constraint | Prompt constraints narrowing scenario space | Monitor dedup rate as a leading indicator; widen if >10% |
+
+---
+
+*← [README](README.md) · [Architecture](ARCHITECTURE.md) · [Engineering Principles](ENGINEERING_PRINCIPLES.md)*
