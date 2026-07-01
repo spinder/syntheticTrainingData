@@ -11,7 +11,7 @@ description: "How production engineering practices — quality gates, calibratio
 
 ---
 
-**TLDR:** This project began as an exercise in generating synthetic training data, but quickly became an exercise in engineering reliable AI systems. Drawing on years of experience building production software, CI/CD pipelines, and DevSecOps workflows, I built an automated pipeline that used weak-model generation, quantitative and qualitative evaluation, calibrated human and LLM labels, rubric-driven iteration, and cost-aware automation to continuously improve data quality. The biggest lesson wasn't prompt engineering—it was the mental shift from traditional software development to LLM engineering, where reproducibility, calibration, evaluation, and disciplined oversight become first-class engineering concerns.
+**TLDR:** Generating synthetic training data at quality requires the same engineering disciplines as any other automated production system — quality gates, calibrated measurement, feedback loops, and constraint propagation. This project built a reproducible pipeline for Home DIY Repair Q&A data, achieved an 88.3% reduction in the LLM judge failure rate across three prompt iterations, and surfaced several non-obvious failure modes along the way.
 
 ---
 
@@ -19,9 +19,9 @@ description: "How production engineering practices — quality gates, calibratio
 
 If you've spent time building CI/CD pipelines, standing up quality gates in security scanning workflows, or debugging why a rule-based alert fires too early and a human-in-the-loop review catches something the automated pass missed — this project will feel recognizable.
 
-The problem is structurally identical, but has a slightly larger scope now. You have an automated generator, a measurement system that may or may not be calibrated, an iterative correction loop, and a target metric that has to be hit before you can ship. The vocabulary is different. The engineering pattern isn't really different but you've added a few new cross-cutting concerns.
+The problem is structurally identical. You have an automated generator, a measurement system that may or may not be calibrated, an iterative correction loop, and a target metric that has to be hit before you can ship. The vocabulary is different. The engineering pattern isn't.
 
-This write-up documents a structured AI engineering project: building a synthetic training data pipeline for a Home DIY Repair Q&A dataset. It covers the design decisions, the architectural evolution, the failures that required root-cause investigation, and what the finished system actually looks like. It doesn't spend time proving the project satisfies a checklist. I spent the time folding the new AI engineering challenges into the existing engineering problem set/toolkits.
+This write-up documents a structured AI engineering project: building a synthetic training data pipeline for a Home DIY Repair Q&A dataset. It covers the design decisions, the architectural evolution, the failures that required root-cause investigation, and what the finished system actually looks like. It doesn't spend time proving the project satisfies a checklist. It spends time on the engineering.
 
 ---
 
@@ -60,11 +60,11 @@ Each component is individually invocable for debugging. The orchestrator is a co
 
 Before the first generation run, there's a design decision that isn't obvious unless you've thought carefully about what you're measuring.
 
-The project requirement is to demonstrate ≥80% reduction in the failure rate between a baseline run and a corrected run. That means the baseline has to fail meaningfully. If the generator produces near-perfect output from the start, the improvement target becomes unreachable specifically because there's nothing to improve against.  I won't sidetrack the conversation here, but selecting a sufficiently bad model required a deeper cross LLM evaluation of which Groq emerged as a solid contender.
+The project requirement is to demonstrate ≥80% reduction in the failure rate between a baseline run and a corrected run. That means the baseline has to fail meaningfully. If the generator produces near-perfect output from the start, the improvement target becomes unreachable — there's nothing to improve against.
 
-This led to a deliberate choice: use a weak model as the generator. Groq's `llama-3.1-8b-instant` on a thin "field names + schema only" prompt (`iter1_weak.txt`) was used for baseline generation. The intent was to suppress instruction-following capability enough to get a ≥15% failure rate across quality dimensions.
+This led to a deliberate choice: use an intentionally constrained model configuration for baseline generation. Groq's `llama-3.1-8b-instant` on a minimal "field names + schema only" prompt (`iter1_weak.txt`) was selected after evaluating several provider options. The intent was to produce a ≥15% failure rate across quality dimensions — a measurable starting point.
 
-What wasn't anticipated is how much the tooling resisted this choice by sharing a single `LLM_PROVIDER` environment variable between the generator and the judge. I'll cover that better below.
+What wasn't anticipated is how much the tooling resisted this choice by sharing a single `LLM_PROVIDER` environment variable between the generator and the judge. That's covered below.
 
 ---
 
@@ -74,12 +74,12 @@ The first full run surfaced immediately: generation that was supposed to take 8 
 
 Those were real problems and were fixed. But they weren't the structural issue.
 
-The structural issue appeared when investigating how to solve the rate limiting: *use a different model for generation, a paid tier for the judge.* At that point the code had only one `LLM_PROVIDER` env var controlling both generation and evaluation. Switching the generator to OpenAI `gpt-4o-mini` for speed would also switch the judge — and `gpt-4o-mini` following a weak prompt still produces better output than `llama-3.1-8b-instant`. The baseline failure rate would drop artificially, not because the prompt improved but because the model improved. Phase B measurements would be noise.  Said another way, using a stronger model undermines a core goal, while using a weaker model runs you into different limitation problems, which pushing you back to using stronger models.
+The structural issue appeared when investigating how to solve the rate limiting: *use a different model for generation, a paid tier for the judge.* At that point the code had only one `LLM_PROVIDER` env var controlling both generation and evaluation. Switching the generator to OpenAI `gpt-4o-mini` for speed would also switch the judge — and `gpt-4o-mini` following a minimal prompt still produces better output than `llama-3.1-8b-instant`. The baseline failure rate would drop artificially, not because the prompt improved but because the model improved. Phase B measurements would be noise.
 
 The fix was to split the environment variables:
 
 ```bash
-LLM_PROVIDER=groq           # generator: intentionally weak
+LLM_PROVIDER=groq           # generator: minimal-instruction baseline
 LLM_MODEL=llama-3.1-8b-instant
 
 JUDGE_LLM_PROVIDER=openai   # judge: fast and accurate
@@ -88,13 +88,13 @@ JUDGE_LLM_MODEL=gpt-4o-mini
 
 `llm_judge_provider.py` was updated to check `JUDGE_LLM_PROVIDER` first, falling back to `LLM_PROVIDER` when no judge override is set. This pattern became the foundation for the recommended setup documented in `DESIGN_DECISIONS.md`.
 
-The lesson: provider abstraction isn't just about flexibility. When the same abstraction controls components with opposite quality requirements and LLM FinOps effects, then a single env var is no longer the right move.  Refactor time baby!
+The lesson: provider abstraction isn't just about flexibility. When the same abstraction controls components with opposite quality requirements, a single env var is a correctness bug.
 
 ---
 
-## The Quality Gates
+## The Quality Gate
 
-Between generation and the LLM judge sits `quality_gate.py`. It runs cheap per-item checks before any expensive LLM call goes out.  Yes I'm imagining the LLM FinOps bean counters are starting to look over suspiciously.
+Between generation and the LLM judge sits `quality_gate.py`. It runs cheap per-item checks before any expensive LLM call goes out.
 
 The gate rejects items for:
 - Pydantic schema validation failures (field lengths, array constraints, type errors)
@@ -106,14 +106,14 @@ The gate rejects items for:
 
 The gate doesn't try to make hard quality judgments. It rejects things that are *definitely wrong* and passes the rest to the LLM judge. This is the right division of labor: cheap, deterministic rules upstream, expensive probabilistic reasoning downstream.
 
-The gate also produces `*_gate_report.json` — a per-item record of what passed, what failed, and why. This feeds into failure note tracking and the rubric generation script.  Collecting some logs for when we need them.
+The gate also produces `*_gate_report.json` — a per-item record of what passed, what failed, and why. This feeds into failure note tracking and the rubric generation script.
 
-One number worth noting: on iter1, the gate pass rate was approximately 65%. That means more than a third of generated items were caught before they ever hit the LLM judge, which was both evidence that the quality gate was working and an early signal about which dimensions the weak prompt struggled with most.  There is value in pulling in the validators before you bring in the bigger/expensive guns.
+One number worth noting: on iter1, the gate pass rate was approximately 65%. That means more than a third of generated items were caught before they ever hit the LLM judge — early evidence that the minimal-prompt configuration was producing the intended baseline failure rate, and a signal about which dimensions to target first.
 
-The heatmap below shows where failures concentrated in the baseline run. HVAC repairs generated the worst tool realism failures (42.9%) — the weak prompt allowed the model to suggest trade-only refrigerant equipment. Electrical repairs had a significant tip usefulness problem (27.3%). These two cells became the Phase B correction targets.
+The heatmap below shows where failures concentrated in the baseline run. HVAC repairs generated the worst tool realism failures (42.9%) — the minimal prompt allowed the model to suggest trade-only refrigerant equipment. Electrical repairs had a significant tip usefulness problem (27.3%). These two cells became the Phase B correction targets.
 
-![Baseline quality heatmap: failure rates by category and quality dimension](../charts/baselineHeatmap.png)
-*Baseline heatmap — iter1 with weak prompt. Darker red = higher failure rate. HVAC × Tool Realism (42.9%) and Electrical × Tip Usefulness (27.3%) drove the first prompt corrections.*
+![Baseline quality heatmap: failure rates by category and quality dimension](charts/baselineHeatmap.png)
+*Baseline heatmap — iter1 with minimal prompt. Darker red = higher failure rate. HVAC × Tool Realism (42.9%) and Electrical × Tip Usefulness (27.3%) drove the first prompt corrections.*
 
 ---
 
@@ -138,17 +138,17 @@ The target is ≥80% agreement on all six dimensions before any Phase B work beg
 
 This step matters because a poorly calibrated judge can produce a "95% pass rate" that simply reflects a judge that passes everything. Or a failure rate that reflects a judge measuring something different than what you actually care about. You can't measure improvement reliably until the measuring instrument is reliable.
 
-In this pipeline, judge failure notes from `human_batch.py` are committed into git with a `Failure notes:` header in the commit message. `generate_rubric.py` reads those notes from `git log` and calls an LLM to synthesize improved rubric criteria per dimension. The intent is that the failure history is preserved in the repository itself, not in a spreadsheet or a separate notes file that gets lost.  Since we've collected enough logs, some quantitative and decent qualitative cross category values then there was plenty for the stronger LLMs to craft better suggestions, still to be verified by the resident human.  The process worked well. 
+In this pipeline, judge failure notes from `human_batch.py` are committed into git with a `Failure notes:` header in the commit message. `generate_rubric.py` reads those notes from `git log` and calls an LLM to synthesize improved rubric criteria per dimension. The failure history is preserved in the repository itself, not in a spreadsheet or a separate notes file that gets lost.
 
 ---
 
-## Phase B: Prompt Injection Whack-a-Mole. What could go wrong...
+## Phase B: Iterative Prompt Correction
 
 Phase B is where the generator prompt gets corrected. `run_pipeline.py --auto-correct` handles this: it identifies the worst-performing category × dimension segment from the batch judge results, reads failure notes from git history and the current session's notes file, and calls an LLM to synthesize a targeted 2–5 sentence prompt addition. After accepting the suggestion, the orchestrator re-generates, re-gates, re-judges, and produces a before/after comparison chart automatically.
 
 The screenshot below shows the loop at work. The pipeline identifies HVAC × Tool Realism as the worst segment, generates a correction targeting trade-only equipment language, and re-runs Steps 1 → 2 → 4 → 5a automatically on acceptance.
 
-![Auto-correct terminal: LLM suggests a prompt addition for D3 tool realism, user accepts, pipeline re-runs](../charts/autoCorrectTerminal.png)
+![Auto-correct terminal: LLM suggests a prompt addition for D3 tool realism, user accepts, pipeline re-runs](charts/autoCorrectTerminal.png)
 *The auto-correct loop in action. The pipeline identifies the worst-failing segment, proposes a targeted addition, and re-runs generation + gating + judging automatically on `[a]ccept`.*
 
 The most technically significant failure in the entire project happened in this loop.
@@ -175,9 +175,9 @@ forbidden_block = (
 )
 ```
 
-The auto-correct LLM has no intrinsic knowledge of what your quality gate bans. It will use natural-sounding language in positive examples. If that language overlaps with your banned phrase list — and it will, because the banned phrases are common natural language — the generator learns the banned phrase from the positive example and starts producing it at scale.
+The auto-correct LLM has no intrinsic knowledge of what your quality gate bans. It will use natural-sounding language in positive examples. If that language overlaps with your banned phrase list — and it will, because the banned phrases are common natural language — the generator learns the phrase from the positive example and starts producing it at scale.
 
-The structural parallel: this is the same class of problem as a security scanner allowlist that becomes too permissive. An exception granted for one case creates a surface the next generation can exploit. The fix isn't patching the instance; it's ensuring the constraint is always injected at the boundary.  At this point I'm looking at the LLM a bit like Ethan Hawk eying up Denzel Washington on his training day and realizing that some of that advice might be laced with something I don't actually want to use. 
+The structural parallel: this is the same class of problem as a security scanner allowlist that becomes too permissive. An exception granted for one case creates a surface the next generation can exploit. The fix isn't patching the instance; it's ensuring the constraint is always injected at the boundary.
 
 ---
 
@@ -195,12 +195,12 @@ Three prompt iterations ran:
 
 The chart below shows the per-dimension breakdown. The dashed blue line marks the 80% pass rate threshold (equivalently, the 20% failure ceiling). Every dimension cleared it in the corrected run. Tool Realism and Scope Appropriateness reached 100%.
 
-![Before/after pass rate per quality dimension: baseline 67% overall vs corrected 93% overall](../charts/beforeAfterPassRate.png)
+![Before/after pass rate per quality dimension: baseline 67% overall vs corrected 93% overall](charts/beforeAfterPassRate.png)
 *Before/after pass rates across all 6 quality dimensions. Baseline overall: 67% (red). Corrected overall: 93% (green). Improvement ratio: 80%. Dashed line marks the target threshold.*
 
 The caveat worth documenting: the generator model changed between iter2 and iter3 (Groq → OpenAI). The 88.3% improvement conflates prompt quality with model capability. `gpt-4o-mini` follows instructions more reliably than `llama-3.1-8b-instant`, which accounts for some portion of the delta. A controlled comparison — same model, different prompts — would isolate the prompt contribution. That run wasn't completed due to time constraints and is a known gap in the measurement.
 
-**Note on the chart numbers vs the table above:** The before/after chart shows 33% → 7% failure (80% improvement ratio) because it compares the post-gate pass rates from specific runs used for the chart. The 9.4% → 1.1% = 88.3% figure in the table is computed from the full LLM judge result logs across all items in each iteration. Both measurements reflect real data; they are counting the same thing differently (chart: per-dimension averaged; table: overall item-level pass/fail from judge logs). The 80% improvement ratio is the conservative floor; 88.3% is the fuller measurement.
+**Note on the chart numbers vs the table above:** The before/after chart shows 33% → 7% failure (80% improvement ratio) because it compares the post-gate pass rates from specific runs used for the chart. The 9.4% → 1.1% = 88.3% figure in the table is computed from the full LLM judge result logs across all items in each iteration. Both measurements reflect real data; they count the same thing differently (chart: per-dimension averaged; table: overall item-level pass/fail from judge logs). The 80% improvement ratio is the conservative floor; 88.3% is the fuller measurement.
 
 ---
 
@@ -216,7 +216,7 @@ The caveat worth documenting: the generator model changed between iter2 and iter
 
 *Preserve failure history in the artifact store.* Failure notes from human review are embedded in git commit messages with a parseable format. The rubric generation script reads `git log` directly. The failure history is in the same place as the code history.
 
-*Resumable by design.* `.pipeline_state.json` persists the name of every generated file after every step. The orchestrator can restart from any completed step. This wasn't added after a failure; it was designed in at the start, because a 2–3 hour pipeline with a single manual step in the middle will crash.
+*Resumable by design.* `.pipeline_state.json` persists the name of every generated file after every step. The orchestrator can restart from any completed step. This wasn't added after a failure; it was designed in at the start, because a 2–3 hour pipeline with a single manual step in the middle will crash before you expect it to.
 
 **What genuinely surprised me:**
 
@@ -224,7 +224,7 @@ The caveat worth documenting: the generator model changed between iter2 and iter
 
 *Rate limits surface design dependencies.* The Groq free-tier ceiling didn't just slow things down — it forced a decision about the generator/judge separation that wouldn't have been obvious otherwise. Operational constraints sometimes expose architectural assumptions worth fixing regardless of the constraint.
 
-*Duplicate rate is a signal about prompt over-constraint.* At 15% duplicate rate in iter3, the prompt's added constraints were narrowing the scenario space enough that the model was generating slight variations of the same repair. Over-constraining a generative model produces repetitive output, which creates a hidden quality problem that the LLM judge doesn't catch.
+*Duplicate rate is a signal about prompt over-constraint.* At 15% duplicate rate in iter3, the prompt's added constraints were narrowing the scenario space enough that the model was generating slight variations of the same repair. Over-constraining a generative model produces repetitive output, which creates a quality problem the LLM judge doesn't catch.
 
 ---
 
@@ -240,7 +240,7 @@ That's the work. The rest is vocabulary.
 
 ---
 
-*Source code, prompts, judge configs, and supporting documentation are in this repository. The `.projectHistory/` directory (session notes, credential scripts, development journals) is excluded from public history.*
+*Source code, prompts, judge configs, and supporting documentation are in this repository. The `.projectHistory/` directory (session notes, development journals) is excluded from public history.*
 
 ---
 
@@ -250,6 +250,6 @@ If this post raised more questions than it answered, the repository has three co
 
 | Document | What it covers |
 |---|---|
-| [`ARCHITECTURE.md`](../ARCHITECTURE.md) | Full pipeline diagram, per-component responsibilities, data flow, and the testing approach for each layer. Start here if you want to understand the system structure before reading code. |
-| [`DESIGN_DECISIONS.md`](../DESIGN_DECISIONS.md) | Eight formal decision records — generator/judge separation, quality gate ordering, resumable execution, calibration gate, prompt correction, provider abstraction, human-in-the-loop design, schema as source of truth. Each includes the alternatives considered and the tradeoff accepted. |
-| [`ENGINEERING_PRINCIPLES.md`](../ENGINEERING_PRINCIPLES.md) | The engineering philosophy distilled from the project — written to be applicable beyond this specific pipeline. |
+| [ARCHITECTURE.md](https://github.com/spinder/syntheticTrainingData/blob/main/ARCHITECTURE.md) | Full pipeline diagram, per-component responsibilities, and data flow. Start here to understand the system structure before reading code. |
+| [DESIGN_DECISIONS.md](https://github.com/spinder/syntheticTrainingData/blob/main/DESIGN_DECISIONS.md) | Eight formal decision records — generator/judge separation, quality gate ordering, resumable execution, calibration gate, prompt correction, provider abstraction, human-in-the-loop design, schema as source of truth. Each includes alternatives considered and the tradeoff accepted. |
+| [ENGINEERING_PRINCIPLES.md](https://github.com/spinder/syntheticTrainingData/blob/main/ENGINEERING_PRINCIPLES.md) | The engineering philosophy distilled from the project — written to be applicable beyond this specific pipeline. |

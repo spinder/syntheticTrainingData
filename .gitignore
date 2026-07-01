@@ -11,6 +11,7 @@ memory/
 
 # Judge run output — large/transient; captured in git commit messages instead
 human/logs/
+human/logs_corrupt/
 llm/logs/
 automated/logs/
 
