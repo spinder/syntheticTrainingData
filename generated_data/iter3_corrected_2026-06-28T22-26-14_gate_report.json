@@ -1,0 +1,237 @@
+{
+  "source": "/home/spinder/workdir/AI/NewLine/miniProject1/syntheticTrainingData/generated_data/iter3_corrected_2026-06-28T22-26-14.jsonl",
+  "total_input": 35,
+  "passed_per_item_checks": 32,
+  "duplicates_removed": 0,
+  "total_gated": 32,
+  "gate_pass_rate": 0.9143,
+  "distribution_check_pass": false,
+  "distribution_min_pct": 0.18,
+  "category_counts": {
+    "appliance_repair": 11,
+    "general_home_repair": 11,
+    "plumbing_repair": 10
+  },
+  "dropped_per_check": {
+    "D6_generic:'be careful'": 2,
+    "D6_generic:'take your time'": 1
+  },
+  "items": [
+    {
+      "id": "qa_0001",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0002",
+      "category": "appliance_repair",
+      "passed": false,
+      "failures": [
+        "D6_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0003",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0004",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0005",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0006",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0007",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0008",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0009",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0010",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0011",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0012",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0013",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0014",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0015",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0016",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "D6_generic:'take your time'"
+      ]
+    },
+    {
+      "id": "qa_0017",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0018",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0019",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0020",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0021",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0022",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0023",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0024",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0025",
+      "category": "plumbing_repair",
+      "passed": false,
+      "failures": [
+        "D6_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0026",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0027",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0028",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0029",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0030",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0031",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0032",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0033",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0034",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0035",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    }
+  ]
+}

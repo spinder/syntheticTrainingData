@@ -14,8 +14,15 @@ human/logs/
 llm/logs/
 automated/logs/
 
-# Derived outputs
-charts/
+# Derived outputs — ignore chart contents but keep named blog images
+# Note: must use charts/* (not charts/) so that ! exceptions can override
+charts/*
+!charts/baselineHeatmap.png
+!charts/beforeAfterPassRate.png
+!charts/autoCorrectTerminal.png
+
+# Generated preview file — rebuild locally with docs/preview.py
+docs/preview.html
 
 # Backup archives created during resets
 generated_data/archive/

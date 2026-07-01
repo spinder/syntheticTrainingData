@@ -1,0 +1,428 @@
+{
+  "source": "/home/spinder/workdir/AI/NewLine/miniProject1/syntheticTrainingData/generated_data/iter1_weak_2026-06-28T18-42-04.jsonl",
+  "total_input": 60,
+  "passed_per_item_checks": 40,
+  "duplicates_removed": 1,
+  "total_gated": 39,
+  "gate_pass_rate": 0.65,
+  "distribution_check_pass": false,
+  "distribution_min_pct": 0.18,
+  "category_counts": {
+    "appliance_repair": 7,
+    "general_home_repair": 6,
+    "plumbing_repair": 8,
+    "electrical_repair": 11,
+    "hvac_maintenance": 7
+  },
+  "dropped_per_check": {
+    "D2_generic:'be cautious'": 8,
+    "D2_generic:'be aware'": 1,
+    "D2_generic:'be careful'": 9,
+    "D6_generic:'take your time'": 1,
+    "D2_generic:'use caution'": 1
+  },
+  "items": [
+    {
+      "id": "qa_0001",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0002",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0003",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0004",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0005",
+      "category": "appliance_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0006",
+      "category": "appliance_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0007",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0008",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0009",
+      "category": "appliance_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be aware'"
+      ]
+    },
+    {
+      "id": "qa_0010",
+      "category": "appliance_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0011",
+      "category": "appliance_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0012",
+      "category": "appliance_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0013",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0014",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0015",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0016",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0017",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0018",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0019",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0020",
+      "category": "general_home_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0021",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0022",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "dup_of:qa_0017"
+      ]
+    },
+    {
+      "id": "qa_0023",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0024",
+      "category": "general_home_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0025",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0026",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0027",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0028",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0029",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0030",
+      "category": "plumbing_repair",
+      "passed": false,
+      "failures": [
+        "D6_generic:'take your time'"
+      ]
+    },
+    {
+      "id": "qa_0031",
+      "category": "plumbing_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0032",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0033",
+      "category": "plumbing_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0034",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0035",
+      "category": "plumbing_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0036",
+      "category": "plumbing_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0037",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0038",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0039",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0040",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0041",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0042",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0043",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0044",
+      "category": "electrical_repair",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0045",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0046",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0047",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0048",
+      "category": "electrical_repair",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0049",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0050",
+      "category": "hvac_maintenance",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0051",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0052",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0053",
+      "category": "hvac_maintenance",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be careful'"
+      ]
+    },
+    {
+      "id": "qa_0054",
+      "category": "hvac_maintenance",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    },
+    {
+      "id": "qa_0055",
+      "category": "hvac_maintenance",
+      "passed": false,
+      "failures": [
+        "D2_generic:'use caution'"
+      ]
+    },
+    {
+      "id": "qa_0056",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0057",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0058",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0059",
+      "category": "hvac_maintenance",
+      "passed": true,
+      "failures": []
+    },
+    {
+      "id": "qa_0060",
+      "category": "hvac_maintenance",
+      "passed": false,
+      "failures": [
+        "D2_generic:'be cautious'"
+      ]
+    }
+  ]
+}

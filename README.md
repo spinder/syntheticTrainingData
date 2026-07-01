@@ -1,133 +1,210 @@
-# syntheticTrainingData
-A training project.
+# Synthetic Training Data Pipeline
 
-## Setup
+A reproducible pipeline for generating, evaluating, and iteratively improving structured synthetic training data using LLMs — with automated quality gates, multi-provider support, human-in-the-loop calibration, and measurable improvement targets.
 
-Install the dependencies:
-```bash
-pip install datasets huggingface_hub pydantic jsonschema pandas pyarrow
+This is **Project 1** in a portfolio of AI engineering projects documenting the application of production engineering practices to AI systems development.
+
+---
+
+## What This Demonstrates
+
+- **Pipeline orchestration**: a resumable multi-step pipeline with explicit state management, human-pause points with exact commands, and `--resume-from <step>` recovery
+- **Provider abstraction**: five inference backends (Claude, OpenAI, DeepSeek, Groq, Ollama) behind a uniform interface; generator and judge providers independently configured
+- **Quality gates**: cheap deterministic pre-filters (schema validation, banned-phrase detection, deduplication, distribution checks) running before expensive LLM judge calls
+- **Evaluation calibration**: human/LLM agreement measurement across 6 quality dimensions before any automated metric is trusted
+- **Prompt correction feedback loop**: failure-driven, data-traceable prompt iteration with root-cause attribution to specific category × dimension segments
+- **Traceability**: failure notes embedded in git history; structured trace records with `trace_id` per item; gate reports per run
+- **Reproducibility**: timestamped JSONL outputs, variant labeling, schema pinned to Pydantic model, JSON Schema auto-derived
+
+---
+
+## Background
+
+The dataset domain is Home DIY Repair Q&A. The engineering domain is everything else.
+
+The pipeline generates 60-item batches of structured repair Q&A, gates them through a quality pre-filter, scores them with an LLM judge across 6 dimensions, verifies that judge against human labels, and iterates on the generation prompt until the failure rate drops by ≥80% from baseline.
+
+The baseline run used a deliberately weak model (Groq `llama-3.1-8b-instant`) with a minimal prompt to establish a measurable starting failure rate. The corrected run achieved an **88.3% reduction in failure rate** (9.4% → 1.1%).
+
+See [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md) for why the architecture looks the way it does.
+See [`docs/blog-synthetic-data-pipeline.md`](docs/blog-synthetic-data-pipeline.md) for the engineering narrative.
+
+---
+
+## Architecture Overview
+
+```
+prompts/iter1_weak.txt
+        │
+        ▼
+   generate.py          ← Instructor + Pydantic; 5 providers; 60 items/run
+        │
+        ▼
+  quality_gate.py       ← schema check · banned phrases · dedup · distribution gate
+        │
+        ├── *_gated.jsonl
+        ├── *_gate_report.json
+        ▼
+  batch_judge.py        ← LLM-as-judge; 6 dims × N items via promptfoo
+        │
+        ├── human_batch.py    ← human labels on ≥20 items (interactive)
+        ▼
+ export_labels.py       ← per-dim human/LLM agreement
+        │
+        ├── Phase A: calibrate judge prompts (if any dim < 80% agreement)
+        ▼
+Phase B: auto-correct generator prompt → re-run → measure delta
+        │
+        ▼
+  visualize.py → charts/   ← pass_rate · heatmap · distribution · before_after
 ```
 
-Generate and validate the schema:
-```bash
-python generate_json_schema.py
-python validate_schema_self_check.py
-# NOTE: HF API key required for dataset validation:
-# python validate_hf_dataset.py
+`run_pipeline.py` orchestrates the automated steps. State is persisted to `.pipeline_state.json` after each step. Human steps emit exact, filename-resolved commands.
+
+Full architecture diagram and component rationale: [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+---
+
+## Repository Layout
+
 ```
-
-## Generating Training Data
-
-`generate.py` produces Home DIY Repair Q&A items in JSONL format using your chosen
-LLM provider. The default run generates **60 items** (12 per category × 5 categories),
-satisfying the ≥50 target.
-
-Output is written to `generated_data/<variant>_<timestamp>.jsonl`.
-
-### Quick start
-
-```bash
-# 60 items with Groq (free, no local GPU required)
-export GROQ_API_KEY="gsk_..."
-python3 generate.py --provider groq --model llama-3.1-8b-instant
-
-# 60 items with Claude (highest quality)
-export ANTHROPIC_API_KEY="sk-ant-..."
-python3 generate.py --provider claude
-
-# 60 items with OpenAI
-export OPENAI_API_KEY="sk-..."
-python3 generate.py --provider openai --model gpt-4o-mini
-
-# 60 items with DeepSeek
-export DEEPSEEK_API_KEY="sk-..."
-python3 generate.py --provider deepseek
-```
-
-### Controlling item count
-
-```bash
-# 50 items — 10 per category
-python3 generate.py --provider groq --model llama-3.1-8b-instant --per-category 10
-
-# 60 items — 12 per category (default)
-python3 generate.py --provider groq --model llama-3.1-8b-instant
-
-# Quick smoke test — 15 items total (3 per category)
-python3 generate.py --provider groq --model llama-3.1-8b-instant --per-category 3
-```
-
-### Labelling a run
-
-```bash
-# Tag the output file with a variant name (e.g. after a prompt change)
-python3 generate.py --provider groq --variant corrected_v2
-```
-
-### Ollama (local)
-
-> **WARNING:** Ollama runs the model entirely on your local machine. Insufficient
-> RAM or VRAM **will crash your system.** See the hardware table in the
-> [LLM Judge Providers](#llm-judge-providers) section before proceeding.
-> Use `groq` instead if you are unsure.
-
-```bash
-# Pull the model first, then generate
-ollama pull llama3.1
-python3 generate.py --provider ollama --model llama3.1
-
-# Custom Ollama host
-OLLAMA_BASE_URL=http://192.168.1.10:11434 python3 generate.py --provider ollama --model llama3.1
+.
+├── generate.py                  # Step 1 — generate JSONL via Instructor + LLM
+├── quality_gate.py              # Step 2 — pre-filter before judge
+├── batch_judge.py               # Step 4 — LLM batch evaluation
+├── human_batch.py               # Step 3 — interactive human labeling
+├── export_labels.py             # Step 5b — agreement measurement
+├── visualize.py                 # Charts from promptfoo result JSON files
+├── run_pipeline.py              # Orchestrator — runs/resumes the full pipeline
+├── run.sh                       # Interactive menu (thin wrapper)
+│
+├── schema/
+│   ├── model.py                 # HomeDiyRepairQA — Pydantic model (source of truth)
+│   └── home_diy_repair_qa.schema.json  # JSON Schema (auto-derived; do not edit)
+│
+├── prompts/
+│   ├── iter1_weak.txt           # Baseline prompt — intentionally minimal
+│   ├── iter2_corrected.txt      # Iter 1 + D3 tool realism fix
+│   └── iter3_corrected.txt      # Iter 2 + D2 safety specificity fix
+│
+├── automated/                   # Rule-based judge pipeline (promptfoo)
+├── human/                       # Human judge pipeline (promptfoo)
+├── llm/                         # LLM-as-judge pipeline (promptfoo)
+│
+├── generated_data/              # JSONL outputs: <variant>_<timestamp>[_gated].jsonl
+├── analysis/                    # Per-item label records, agreement JSON, combined CSV
+├── charts/                      # PNG chart outputs
+│
+├── validate_record.py           # Validate a single JSONL record against schema
+├── validate_schema_self_check.py
+│
+├── ARCHITECTURE.md
+├── DESIGN_DECISIONS.md
+├── ENGINEERING_PRINCIPLES.md
+│
+└── docs/
+    ├── blog-synthetic-data-pipeline.md  # Engineering narrative with charts
+    └── preview.py                       # Regenerate local HTML preview
 ```
 
 ---
 
-## LLM Judge Providers
-
-The `llm/` evaluation pipeline supports multiple inference backends. Set `LLM_PROVIDER`
-and the matching key before running `promptfoo eval --config llm/promptfooconfig.yaml`.
-
-| Provider | Default model | Key env var | Notes |
-|---|---|---|---|
-| `claude` | claude-opus-4-7 | `ANTHROPIC_API_KEY` | Highest quality |
-| `openai` | gpt-4o | `OPENAI_API_KEY` | |
-| `deepseek` | deepseek-chat | `DEEPSEEK_API_KEY` | Cost-effective |
-| `groq` | llama-3.1-8b-instant | `GROQ_API_KEY` | **Recommended for fast/free cloud inference** |
-| `ollama` | llama3.2 | *(none)* | Local only — see hardware warning below |
-
-### Groq (recommended free option)
-
-Groq runs Llama, Mixtral, and Gemma models in the cloud with no local GPU required:
+## Quickstart
 
 ```bash
+# Install dependencies
+pip install instructor anthropic openai groq pydantic jsonschema \
+            matplotlib numpy pandas pyarrow datasets huggingface_hub
+npm install -g promptfoo
+
+# Set providers (split — recommended)
+export GROQ_API_KEY="gsk_..."
 export LLM_PROVIDER=groq
-export GROQ_API_KEY="gsk_..."          # free key at console.groq.com
-export LLM_MODEL=llama-3.1-8b-instant  # or llama3-70b-8192, mixtral-8x7b-32768
-promptfoo eval --config llm/promptfooconfig.yaml
+export LLM_MODEL=llama-3.1-8b-instant
+
+export OPENAI_API_KEY="sk-..."
+export JUDGE_LLM_PROVIDER=openai
+export JUDGE_LLM_MODEL=gpt-4o-mini
+
+# Run the full pipeline with auto-correct
+python3 run_pipeline.py --auto-correct
+
+# Resume after the human labeling pause
+python3 run_pipeline.py --resume --auto-correct
 ```
 
-### Ollama — Local Inference
+For the rationale behind the split-provider setup, see [`DESIGN_DECISIONS.md § Generator vs Judge Separation`](DESIGN_DECISIONS.md).
 
-> **WARNING:** Ollama runs the full model on your local machine. Running a model that
-> exceeds your available RAM or VRAM **will crash your system.** Verify your hardware
-> before use. Use `groq` instead if you are unsure.
+---
 
-**Minimum hardware requirements by model size:**
+## Local Blog Preview
 
-| Model size | RAM | VRAM (GPU) |
-|---|---|---|
-| ~3B (e.g. `phi3:mini`, `llama3.2:1b`) | 8 GB | 6 GB |
-| ~7B (e.g. `llama3.2`, `mistral`) | 16 GB | 8 GB |
-| ~13B | 32 GB | 16 GB |
-| ~70B | 64 GB | 48 GB (multi-GPU) |
-
-If your machine meets the requirements, start the Ollama server and then run:
+The blog post at `docs/blog-synthetic-data-pipeline.md` references images in `charts/`. To preview it locally with images rendering correctly, serve the repo root as a static site — browsers resolve `../charts/` relative to `/docs/` correctly when served from a common origin.
 
 ```bash
-ollama pull phi3:mini                   # pull the model first
-export LLM_PROVIDER=ollama
-export LLM_MODEL=phi3:mini             # use the lightest model that fits your hardware
-# Optional: export OLLAMA_HOST=http://localhost:11434  (default)
-promptfoo eval --config llm/promptfooconfig.yaml
+# One-time: generate the HTML preview
+cd /path/to/syntheticTrainingData
+python3 docs/preview.py
+
+# Serve and open
+python3 -m http.server 8080
+# Open: http://localhost:8080/docs/preview.html
+# Stop: Ctrl+C
 ```
 
+> **Note:** `docs/preview.html` is gitignored — it is a generated artefact. Re-run
+> `python3 docs/preview.py` any time you edit the blog markdown. Do not commit it.
+
+---
+
+## Publishing to GitHub Pages
+
+The blog is configured for Jekyll rendering via GitHub Pages. To publish:
+
+**1. Ensure the three blog images are committed** (they are gitignore-excepted):
+```bash
+git add charts/baselineHeatmap.png charts/beforeAfterPassRate.png charts/autoCorrectTerminal.png
+git add docs/blog-synthetic-data-pipeline.md docs/preview.py
+git commit -m "i)adding blog post, preview helper, and blog chart images."
+```
+
+**2. Enable GitHub Pages in the repo settings:**
+- Go to **Settings → Pages**
+- Source: `Deploy from a branch`
+- Branch: `main` / folder: `/docs`
+- Save — GitHub will build and publish within ~60 seconds
+
+**3. Your blog will be live at:**
+```
+https://spinder.github.io/syntheticTrainingData/blog-synthetic-data-pipeline
+```
+
+> **Image paths:** The blog uses relative paths (`../charts/filename.png`). These work
+> for both GitHub.com file preview and GitHub Pages rendering when Pages is served from
+> `/docs`. If you later add a `baseurl` to `docs/_config.yml`, update image references
+> to use `{{ site.baseurl }}/charts/filename.png` instead.
+
+---
+
+## Key Engineering Concepts
+
+**Generator/judge separation**: The generator and the judge have opposite quality requirements. A weak model as generator produces the failure rate needed to demonstrate improvement. A strong, consistent model as judge produces reliable measurements. They must be independently configured.
+
+**Quality gate ordering**: The gate runs before the LLM judge, not after. Cheap deterministic checks eliminate ≥35% of failures at near-zero cost, improving signal quality and reducing judge API spend.
+
+**Calibration before measurement**: Phase A verifies ≥80% human/LLM agreement per dimension before any judge metric is used to drive prompt changes. An uncalibrated judge that agrees with humans 60% of the time produces measurements that could as easily reflect judge errors as generator errors.
+
+**Failure traceability**: Human labeling failure notes are embedded in git commit messages with a parseable format. The rubric synthesis script reads `git log` directly. Failure history lives in the same store as code history.
+
+**Constraint injection at trust boundaries**: The auto-correct LLM synthesizing prompt additions has no knowledge of what the quality gate bans. The banned phrase list is explicitly injected into every synthesis call. See [`docs/blog-synthetic-data-pipeline.md`](docs/blog-synthetic-data-pipeline.md) — *Phase B: Prompt Injection Whack-a-Mole*.
+
+---
+
+## Further Reading
+
+| Document | Contents |
+|---|---|
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Pipeline components, data flow, design rationale |
+| [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md) | Major decisions, alternatives considered, tradeoffs |
+| [`ENGINEERING_PRINCIPLES.md`](ENGINEERING_PRINCIPLES.md) | Reusable engineering philosophy for AI systems |
+| [`docs/blog-synthetic-data-pipeline.md`](docs/blog-synthetic-data-pipeline.md) | Engineering narrative: the journey, not just the outcome |
